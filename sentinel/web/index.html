@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel — Family Safety</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121821; --panel-2:#182130; --line:#22303f;
+    --txt:#e6edf5; --dim:#8ea0b5; --accent:#3b82f6; --accent-2:#22d3ee;
+    --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --sos:#dc2626; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent-2);text-decoration:none}
+  button{font:inherit;cursor:pointer;border:0;border-radius:9px;padding:9px 15px;background:var(--accent);color:#fff;font-weight:600;transition:.15s}
+  button:hover{filter:brightness(1.12)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+  button.ghost:hover{color:var(--txt);border-color:var(--accent)}
+  button.danger{background:var(--bad)}
+  input,select{font:inherit;background:#0d131b;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px 12px;width:100%}
+  input:focus,select:focus{outline:0;border-color:var(--accent)}
+  .hidden{display:none!important}
+  .shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+  aside{background:var(--panel);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px}
+  .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#04121f}
+  .brand b{font-size:15px;letter-spacing:.2px}
+  .brand small{display:block;font-size:10px;color:var(--dim);font-weight:500;letter-spacing:.4px}
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .nav a{padding:10px 12px;border-radius:9px;color:var(--dim);font-weight:500;display:flex;justify-content:space-between;align-items:center}
+  .nav a:hover{background:var(--panel-2);color:var(--txt)}
+  .nav a.on{background:linear-gradient(90deg,rgba(59,130,246,.18),transparent);color:var(--txt);box-shadow:inset 2px 0 0 var(--accent)}
+  .nav .pill{background:var(--bad);color:#fff;font-size:11px;padding:1px 7px;border-radius:99px;font-weight:700}
+  .foot{margin-top:auto;font-size:11px;color:#5d7086;padding:12px 8px;border-top:1px solid var(--line)}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)}
+  .dot{width:7px;height:7px;border-radius:99px;background:var(--ok);box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+  .dot.off{background:#64748b;box-shadow:none}
+  main{padding:24px 28px;max-width:1320px}
+  h1{font-size:21px;margin:0 0 4px;font-weight:700}
+  .sub{color:var(--dim);font-size:13px;margin:0 0 20px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px}
+  .card .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:600}
+  .card .v{font-size:24px;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+  .panel h2{font-size:12px;margin:0;padding:13px 16px;border-bottom:1px solid var(--line);color:var(--dim);text-transform:uppercase;letter-spacing:.7px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+  .panel h2 button{font-size:11px;padding:5px 11px;text-transform:none;letter-spacing:0}
+  .pad{padding:16px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 16px;color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--line)}
+  td{padding:11px 16px;border-bottom:1px solid rgba(34,48,63,.55);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:rgba(59,130,246,.05)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+  .b-active{background:rgba(34,197,94,.15);color:var(--ok)}
+  .b-pending{background:rgba(245,158,11,.15);color:var(--warn)}
+  .b-paused{background:rgba(148,163,184,.15);color:#94a3b8}
+  .b-revoked{background:rgba(239,68,68,.15);color:var(--bad)}
+  .b-home{background:rgba(34,197,94,.15);color:var(--ok)}
+  .b-school{background:rgba(59,130,246,.15);color:#93c5fd}
+  .b-other{background:rgba(148,163,184,.15);color:#cbd5e1}
+  .empty{padding:32px 16px;text-align:center;color:var(--dim);font-size:13px}
+  .auth{max-width:392px;margin:8vh auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:30px}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:12px;color:var(--dim);margin-bottom:6px;font-weight:600}
+  .err{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fca5a5;padding:10px 12px;border-radius:9px;font-size:13px;margin-bottom:13px}
+  .ok-box{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);color:#86efac;padding:10px 12px;border-radius:9px;font-size:13px;margin-bottom:13px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .spread{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+  .notice{background:rgba(59,130,246,.09);border:1px solid rgba(59,130,246,.32);border-radius:var(--radius);padding:13px 16px;font-size:12.5px;color:#bcd3f0;margin-bottom:16px;line-height:1.55}
+  code{background:#0d131b;border:1px solid var(--line);padding:1px 6px;border-radius:5px;font-size:12px}
+  .bar{height:6px;background:#0d131b;border-radius:99px;overflow:hidden;margin-top:7px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+  /* child cards */
+  .kids{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+  .kid{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;transition:.15s}
+  .kid:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .kid .top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .avatar{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:16px;color:#04121f;background:linear-gradient(135deg,#67e8f9,#3b82f6)}
+  .kid .name{font-weight:700;font-size:15px}
+  .kid .meta{font-size:12px;color:var(--dim)}
+  .kid .zones{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .kid .bottom{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+  .sos-banner{background:linear-gradient(90deg,var(--sos),#991b1b);padding:14px 18px;border-radius:var(--radius);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;font-weight:600;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.82}}
+  /* map */
+  .mapwrap{position:relative;background:#0a1119;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line)}
+  .map{display:block;width:100%;height:auto}
+  .maplegend{position:absolute;right:10px;bottom:10px;background:rgba(11,15,20,.86);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:11px;color:var(--dim);line-height:1.7;backdrop-filter:blur(4px)}
+  .actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+  .actions button{background:var(--panel-2);border:1px solid var(--line);color:var(--txt);font-weight:600;font-size:12.5px;padding:11px}
+  .actions button:hover{border-color:var(--accent);background:rgba(59,130,246,.12)}
+  .toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:9px;z-index:99;max-width:340px}
+  .toast{background:var(--panel);border:1px solid var(--accent);border-left:4px solid var(--accent);border-radius:11px;padding:12px 14px;font-size:13px;box-shadow:0 12px 32px rgba(0,0,0,.5);animation:slide .25s ease}
+  .toast.critical{border-color:var(--sos);border-left-color:var(--sos)}
+  .toast .tt{font-weight:700;margin-bottom:3px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim)}
+  @keyframes slide{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+  .tabs{display:flex;gap:6px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tabs button{background:transparent;border:1px solid var(--line);color:var(--dim);padding:6px 13px;font-size:12px;font-weight:600}
+  .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;align-items:start}
+  @media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="view-auth" class="hidden">
+  <div class="auth">
+    <div class="brand"><div class="logo">S</div><b>Sentinel<small>FAMILY SAFETY</small></b></div>
+    <div id="auth-err" class="err hidden"></div>
+    <div class="field"><label>Email</label><input id="li-email" type="email" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input id="li-pass" type="password" autocomplete="current-password"></div>
+    <div class="field hidden" id="totp-field"><label>Two-factor code</label><input id="li-totp" inputmode="numeric" placeholder="123456"></div>
+    <button id="btn-login" style="width:100%">Sign in</button>
+    <p class="sub" style="margin:14px 0 0;text-align:center">No account? <a href="#" id="to-register">Create one</a></p>
+  </div>
+</div>
+
+<div id="view-register" class="hidden">
+  <div class="auth">
+    <div class="brand"><div class="logo">S</div><b>Sentinel<small>FAMILY SAFETY</small></b></div>
+    <h1>Create account</h1>
+    <p class="sub">Self-hosted. Your family's data stays on your server.</p>
+    <div id="reg-err" class="err hidden"></div>
+    <div class="field"><label>Family / organisation name</label><input id="rg-org" placeholder="The Sharma Family"></div>
+    <div class="field"><label>Email</label><input id="rg-email" type="email"></div>
+    <div class="field"><label>Password (min 10 chars)</label><input id="rg-pass" type="password"></div>
+    <button id="btn-register" style="width:100%">Create account</button>
+    <p class="sub" style="margin:14px 0 0;text-align:center"><a href="#" id="to-login">Back to sign in</a></p>
+  </div>
+</div>
+
+<div id="view-app" class="shell hidden">
+  <aside>
+    <div class="brand"><div class="logo">S</div><b>Sentinel<small>FAMILY SAFETY</small></b></div>
+    <nav class="nav">
+      <a href="#" data-page="home" class="on">Family</a>
+      <a href="#" data-page="alerts">Alerts <span id="alert-pill" class="pill hidden">0</span></a>
+      <a href="#" data-page="audit">Audit log</a>
+      <a href="#" data-page="settings">Settings</a>
+    </nav>
+    <div class="foot">
+      <div id="who" style="margin-bottom:8px"></div>
+      <div class="live" style="margin-bottom:8px"><span id="live-dot" class="dot off"></span><span id="live-txt">connecting…</span></div>
+      <a href="#" id="btn-logout">Sign out</a>
+    </div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+const state = {
+  token: localStorage.getItem("sentinel_token") || null,
+  page: "home", device: null, timelineKind: null,
+  devices: [], zones: [], locations: [], ws: null, unacked: 0, me: null,
+};
+
+/* ---------- utils ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtTs = ms => ms ? new Date(Number(ms)).toLocaleString(undefined,{month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"}) : "—";
+const fmtTime = ms => ms ? new Date(Number(ms)).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"}) : "—";
+// Takes a DELTA in seconds (all callers pass "seconds since X"), not an epoch timestamp.
+function ago(delta){
+  if(delta == null) return "never";
+  const s = Math.max(0, Math.floor(delta));
+  if(s < 60) return s + "s ago";
+  if(s < 3600) return Math.floor(s/60) + "m ago";
+  if(s < 86400) return Math.floor(s/3600) + "h ago";
+  return Math.floor(s/86400) + "d ago";
+}
+function haversine(a,b,c,d){
+  const R=6371000, r=Math.PI/180;
+  const p1=a*r,p2=c*r,dp=(c-a)*r,dl=(d-b)*r;
+  const x=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+const initials = n => (n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+
+function toast(title, msg, severity){
+  const el = document.createElement("div");
+  el.className = "toast" + (severity === "critical" ? " critical" : "");
+  el.innerHTML = `<div class="tt">${esc(title)}</div>${esc(msg)}`;
+  $("#toasts").appendChild(el);
+  setTimeout(() => el.remove(), 9000);
+}
+
+/* ---------- api ---------- */
+async function api(path, opts = {}){
+  const headers = { "Content-Type":"application/json", ...(opts.headers||{}) };
+  if(state.token) headers.Authorization = "Bearer " + state.token;
+  const res = await fetch(path, { ...opts, headers });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = { detail: text }; }
+  if(res.status === 401 && state.token){ logoutLocal(); }
+  if(!res.ok){
+    const d = data && data.detail;
+    const err = new Error(Array.isArray(d) ? d.map(x=>x.msg||JSON.stringify(x)).join("; ") : (d || ("HTTP "+res.status)));
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+/* ---------- auth ---------- */
+function show(v){ for(const id of ["view-auth","view-register","view-app"]) $("#"+id).classList.add("hidden"); $("#"+v).classList.remove("hidden"); }
+function logoutLocal(){ state.token=null; localStorage.removeItem("sentinel_token"); if(state.ws) state.ws.close(); show("view-auth"); }
+
+$("#btn-login").onclick = async () => {
+  const err = $("#auth-err"); err.classList.add("hidden");
+  const body = { email: $("#li-email").value.trim(), password: $("#li-pass").value };
+  const t = $("#li-totp").value.trim();
+  if(t) body.totp_code = t;
+  try{
+    const d = await api("/api/auth/login", { method:"POST", body: JSON.stringify(body) });
+    state.token = d.token; localStorage.setItem("sentinel_token", d.token); await boot();
+  } catch(e){
+    if(e.message === "totp_required"){
+      $("#totp-field").classList.remove("hidden");
+      err.textContent = "Enter the 6-digit code from your authenticator app."; err.classList.remove("hidden");
+      $("#li-totp").focus();
+    } else { err.textContent = e.message; err.classList.remove("hidden"); }
+  }
+};
+$("#li-totp").addEventListener("keydown", e => { if(e.key === "Enter") $("#btn-login").click(); });
+$("#li-pass").addEventListener("keydown", e => { if(e.key === "Enter") $("#btn-login").click(); });
+$("#btn-register").onclick = async () => {
+  const err = $("#reg-err"); err.classList.add("hidden");
+  try{
+    const d = await api("/api/auth/register", { method:"POST", body: JSON.stringify({
+      org_name: $("#rg-org").value.trim(), email: $("#rg-email").value.trim(), password: $("#rg-pass").value }) });
+    state.token = d.token; localStorage.setItem("sentinel_token", d.token); await boot();
+  } catch(e){ err.textContent = e.message; err.classList.remove("hidden"); }
+};
+$("#to-register").onclick = e => { e.preventDefault(); show("view-register"); };
+$("#to-login").onclick = e => { e.preventDefault(); show("view-auth"); };
+$("#btn-logout").onclick = e => { e.preventDefault(); logoutLocal(); };
+document.querySelectorAll(".nav a").forEach(a => a.onclick = e => {
+  e.preventDefault(); state.page = a.dataset.page; state.device = null;
+  document.querySelectorAll(".nav a").forEach(x => x.classList.toggle("on", x === a));
+  render();
+});
+
+/* ---------- live socket ---------- */
+function connectWS(){
+  if(!state.token) return;
+  const url = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws?token=" + encodeURIComponent(state.token);
+  let ws;
+  try { ws = new WebSocket(url); } catch { setLive(false); return; }
+  state.ws = ws;
+  ws.onopen = () => setLive(true);
+  ws.onclose = () => { setLive(false); setTimeout(connectWS, 4000); };
+  ws.onerror = () => setLive(false);
+  ws.onmessage = ev => {
+    let m; try { m = JSON.parse(ev.data); } catch { return; }
+    if(m.topic === "ping" || m.topic === "hello") return;
+    if(m.topic === "alert"){
+      toast(m.data.severity === "critical" ? "Emergency alert" : "New alert", m.data.message, m.data.severity);
+      refreshAlertPill();
+      if(state.page === "alerts") renderAlerts($("#main"));
+      if(state.page === "home") renderHome($("#main"));
+      if(state.page === "device" && state.device) renderDevice($("#main"));
+    }
+    if(m.topic === "sync"){
+      if(state.device === m.data.device_id) renderDevice($("#main"));
+      if(state.page === "home") renderHome($("#main"));
+    }
+  };
+}
+function setLive(on){
+  $("#live-dot").className = "dot" + (on ? "" : " off");
+  $("#live-txt").textContent = on ? "live" : "reconnecting…";
+}
+
+async function refreshAlertPill(){
+  try{
+    const d = await api("/api/alerts?unacked=true");
+    state.unacked = d.alerts.length;
+    const p = $("#alert-pill");
+    p.textContent = d.alerts.length; p.classList.toggle("hidden", d.alerts.length === 0);
+  }catch{}
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  show("view-app");
+  state.me = await api("/api/me");
+  $("#who").innerHTML = `<div style="color:var(--txt);font-weight:600">${esc(state.me.org?.name||"")}</div>
+    <div>${esc(state.me.user.email)}</div>`;
+  connectWS();
+  await refreshAlertPill();
+  await render();
+}
+async function render(){
+  const main = $("#main");
+  if(state.page === "home") return renderHome(main);
+  if(state.page === "device") return renderDevice(main);
+  if(state.page === "alerts") return renderAlerts(main);
+  if(state.page === "audit") return renderAudit(main);
+  if(state.page === "settings") return renderSettings(main);
+}
+
+/* ---------- home ---------- */
+async function renderHome(main){
+  const [{devices}, {alerts}] = await Promise.all([api("/api/devices"), api("/api/alerts?unacked=true")]);
+  state.devices = devices;
+  const sosAlerts = alerts.filter(a => a.rule === "sos");
+  const hasSOS = sosAlerts.length > 0;
+
+  main.innerHTML = `
+    ${hasSOS ? `<div class="sos-banner"><span>Emergency SOS · ${esc(sosAlerts[0].label)} — ${esc(sosAlerts[0].message)}</span>
+      <button class="ghost" style="color:#fff;border-color:rgba(255,255,255,.5)" data-goto="${esc(sosAlerts[0].device_id)}">View now</button></div>` : ""}
+    <div class="spread">
+      <div><h1>Family</h1><p class="sub">Everyone you look after, at a glance.</p></div>
+      <button id="btn-new">+ Add a device</button>
+    </div>
+    <div id="new-form"></div>
+    <div class="kids" id="kids">
+      ${devices.length ? devices.map(d => kidCard(d, alerts.filter(a => a.device_id === d.id))).join("")
+        : `<div class="panel"><div class="empty">No devices yet. <b>Add a device</b> to get an enrollment code.</div></div>`}
+    </div>`;
+
+  $("#btn-new").onclick = toggleNewDevice;
+  document.querySelectorAll("[data-goto]").forEach(b => b.onclick = () => { state.device = b.dataset.goto; state.page = "device"; render(); });
+  document.querySelectorAll(".kid").forEach(el => el.onclick = () => {
+    state.device = el.dataset.id; state.page = "device"; render();
+  });
+}
+
+function kidCard(d, alerts){
+  const loc = d.last_location;
+  const fresh = d.last_location_age != null && d.last_location_age < 1800;
+  return `<div class="kid" data-id="${esc(d.id)}">
+    <div class="top">
+      <div class="avatar">${esc(initials(d.owner_name))}</div>
+      <div style="flex:1">
+        <div class="name">${esc(d.owner_name)}</div>
+        <div class="meta">${esc(d.label)}</div>
+      </div>
+      <span class="badge b-${esc(d.status)}">${esc(d.status)}</span>
+    </div>
+    <div class="meta">
+      ${loc && fresh ? `<b style="color:var(--txt)">Location updated ${esc(ago(d.last_location_age))}</b>`
+        : loc ? `Last seen near ${loc.lat.toFixed(3)}, ${loc.lon.toFixed(3)} · ${esc(ago(d.last_location_age))}`
+        : "No location yet"}
+      ${loc ? `<div style="margin-top:4px">±${Math.round(loc.accuracy||0)}m · battery ${d.battery ?? "—"}%</div>` : ""}
+    </div>
+    <div class="zones">
+      ${d.zone_count ? `<span class="badge b-other">${d.zone_count} place${d.zone_count===1?"":"s"} watched</span>` : `<span class="badge b-other">no places yet</span>`}
+      ${alerts.length ? `<span class="badge" style="background:rgba(239,68,68,.15);color:#fca5a5">${alerts.length} alert${alerts.length===1?"":"s"}</span>` : ""}
+      ${d.current_zone ? `<span class="badge b-${esc(d.current_zone.kind)}">At ${esc(d.current_zone.name)}</span>` : ""}
+      ${alerts.some(a=>a.rule==="sos") ? `<span class="badge" style="background:var(--sos);color:#fff">SOS</span>` : ""}
+    </div>
+    <div class="bottom">
+      <span>${d.last_seen ? "Synced " + esc(ago(Math.floor(Date.now()/1000)-d.last_seen)) : "never synced"}</span>
+      <span>Open →</span>
+    </div>
+  </div>`;
+}
+
+function toggleNewDevice(){
+  const box = $("#new-form");
+  if(box.dataset.open === "1"){ box.innerHTML=""; box.dataset.open="0"; return; }
+  box.dataset.open = "1";
+  box.innerHTML = `<div class="panel pad" style="margin-bottom:18px">
+    <h2 style="border:0;padding:0 0 12px">Add a device</h2>
+    <div class="row" style="align-items:flex-end">
+      <div class="field" style="flex:1;min-width:150px;margin:0"><label>Device name</label><input id="nd-label" placeholder="Aarav's phone"></div>
+      <div class="field" style="flex:1;min-width:150px;margin:0"><label>Child's name</label><input id="nd-owner" placeholder="Aarav"></div>
+      <div class="field" style="flex:1;min-width:170px;margin:0"><label>Their email</label><input id="nd-email" placeholder="aarav@example.com"></div>
+      <div class="field" style="min-width:190px;margin:0"><label>Relationship</label>
+        <select id="nd-basis">
+          <option value="parental">My child (parental)</option>
+          <option value="consent">Adult who consents</option>
+          <option value="employment">Company device</option>
+        </select></div>
+      <button id="nd-go">Get code</button>
+    </div>
+    <div class="notice" style="margin:14px 0 0">
+      <b>Install it together.</b> Sit with your child, open the app, read the consent screen out loud, and let them tick the box.
+      Children who understand what the app does are far less likely to try to remove it — and the app shows a permanent
+      notification they can see at any time.
+    </div>
+    <div id="nd-out"></div></div>`;
+  $("#nd-go").onclick = async () => {
+    const out = $("#nd-out");
+    try{
+      const r = await api("/api/devices", { method:"POST", body: JSON.stringify({
+        label: $("#nd-label").value.trim(), owner_name: $("#nd-owner").value.trim(),
+        owner_email: $("#nd-email").value.trim(), lawful_basis: $("#nd-basis").value }) });
+      out.innerHTML = `<div class="ok-box" style="margin-top:14px">
+        <b>Enrollment code: <span class="mono" style="font-size:17px;letter-spacing:3px">${esc(r.enroll_code)}</span></b><br>
+        Valid for 60 minutes. Enter it in the Sentinel app on the device.<br>
+        <span style="color:var(--dim)">${esc(r.instructions)}</span></div>`;
+      // Refresh the device cards without wiping the panel that holds the code.
+      // renderHome() rebuilds #new-form empty, so re-rendering it here would
+      // destroy the enrollment code the parent is about to read out.
+      const fresh = await api("/api/devices");
+      state.devices = fresh.devices;
+      const kidsEl = $("#kids");
+      if(kidsEl){
+        kidsEl.innerHTML = fresh.devices.map(d => kidCard(d, [])).join("");
+        kidsEl.querySelectorAll(".kid").forEach(el => el.onclick = () => {
+          state.device = el.dataset.id; state.page = "device"; render();
+        });
+      }
+    } catch(e){ out.innerHTML = `<div class="err" style="margin-top:14px">${esc(e.message)}</div>`; }
+  };
+}
+
+/* ---------- map renderer ---------- */
+function renderMap(loc, zones, trail){
+  const W = 720, H = 380, PAD = 46;
+  // Fit all points (zones + trail + current) into the viewport.
+  const pts = [];
+  if(loc) pts.push([loc.lat, loc.lon]);
+  zones.forEach(z => pts.push([z.lat, z.lon]));
+  trail.forEach(t => pts.push([t.lat, t.lon]));
+  if(!pts.length) return `<div class="empty" style="padding:60px">No location data yet.</div>`;
+
+  let minLat = Math.min(...pts.map(p=>p[0])), maxLat = Math.max(...pts.map(p=>p[0]));
+  let minLon = Math.min(...pts.map(p=>p[1])), maxLon = Math.max(...pts.map(p=>p[1]));
+  const spanLat = Math.max(maxLat-minLat, 0.004), spanLon = Math.max(maxLon-minLon, 0.004);
+  const clat=(minLat+maxLat)/2, clon=(minLon+maxLon)/2;
+  minLat = clat-spanLat/2*1.4; maxLat = clat+spanLat/2*1.4;
+  minLon = clon-spanLon/2*1.4; maxLon = clon+spanLon/2*1.4;
+
+  const X = lon => PAD + (lon-minLon)/(maxLon-minLon)*(W-2*PAD);
+  const Y = lat => PAD + (maxLat-lat)/(maxLat-minLat)*(H-2*PAD);
+  const mPerPx = haversine(clat,minLon,clat,maxLon) / (W-2*PAD);
+
+  const grid = [];
+  for(let i=0;i<=6;i++){ const gx = PAD + i*(W-2*PAD)/6; grid.push(`<line x1="${gx}" y1="${PAD}" x2="${gx}" y2="${H-PAD}"/>`); }
+  for(let i=0;i<=4;i++){ const gy = PAD + i*(H-2*PAD)/4; grid.push(`<line x1="${PAD}" y1="${gy}" x2="${W-PAD}" y2="${gy}"/>`); }
+
+  const zoneSvg = zones.map(z => {
+    const r = Math.max(14, z.radius_m / mPerPx);
+    const col = z.kind === "home" ? "#22c55e" : z.kind === "school" ? "#3b82f6" : "#94a3b8";
+    return `<g>
+      <circle cx="${X(z.lon).toFixed(1)}" cy="${Y(z.lat).toFixed(1)}" r="${r.toFixed(1)}"
+        fill="${col}" fill-opacity="0.10" stroke="${col}" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="${z.inside?"none":"5 4"}"/>
+      <circle cx="${X(z.lon).toFixed(1)}" cy="${Y(z.lat).toFixed(1)}" r="3.5" fill="${col}"/>
+      <text x="${X(z.lon).toFixed(1)}" y="${(Y(z.lat)-r-7).toFixed(1)}" text-anchor="middle"
+        fill="${col}" font-size="11" font-weight="700" font-family="ui-sans-serif,system-ui">${esc(z.name)}</text>
+    </g>`;
+  }).join("");
+
+  const trailSvg = trail.length > 1 ? `<polyline points="${trail.map(t=>`${X(t.lon).toFixed(1)},${Y(t.lat).toFixed(1)}`).join(" ")}"
+      fill="none" stroke="#22d3ee" stroke-opacity="0.65" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` : "";
+
+  const dotSvg = loc ? `<g>
+      <circle cx="${X(loc.lon).toFixed(1)}" cy="${Y(loc.lat).toFixed(1)}" r="16" fill="#22d3ee" fill-opacity="0.14"/>
+      <circle cx="${X(loc.lon).toFixed(1)}" cy="${Y(loc.lat).toFixed(1)}" r="7" fill="#22d3ee" stroke="#04121f" stroke-width="2.5"/>
+    </g>` : "";
+
+  return `<div class="mapwrap">
+    <svg class="map" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${W}" height="${H}" fill="#0a1119"/>
+      <g stroke="#16222f" stroke-width="1">${grid.join("")}</g>
+      <text x="${PAD}" y="${H-16}" font-size="10" fill="#4a5d72" font-family="ui-monospace,monospace">N ↑ · scale ≈ ${Math.round(mPerPx*40)}m per 40px</text>
+      ${zoneSvg}${trailSvg}${dotSvg}
+    </svg>
+    <div class="maplegend">
+      <div><span style="color:#22c55e">●</span> home</div>
+      <div><span style="color:#3b82f6">●</span> school</div>
+      <div><span style="color:#22d3ee">●</span> current position</div>
+    </div>
+  </div>`;
+}
+
+/* ---------- device ---------- */
+async function renderDevice(main){
+  const id = state.device;
+  const [liveData, devs, tl, cmds, alerts] = await Promise.all([
+    api(`/api/devices/${id}/live`), api("/api/devices"),
+    api(`/api/devices/${id}/timeline?kind=location&limit=40`),
+    api(`/api/devices/${id}/commands`), api("/api/alerts"),
+  ]);
+  const dev = devs.devices.find(x => x.id === id);
+  if(!dev){ state.page="home"; state.device=null; return renderHome(main); }
+  const loc = liveData.location;
+  const zones = liveData.zones;
+  const trail = tl.events.slice().reverse().map(e => ({lat:e.lat, lon:e.lon}));
+  const myAlerts = alerts.alerts.filter(a => a.device_id === id);
+
+  main.innerHTML = `
+    <div class="spread">
+      <div>
+        <a href="#" id="back" style="font-size:12px">← Family</a>
+        <h1 style="margin-top:6px">${esc(dev.owner_name)}</h1>
+        <p class="sub" style="margin:0">${esc(dev.label)} · ${esc(dev.model||"device")} · ${esc(dev.os_version||"")}</p>
+      </div>
+      <div class="row">
+        <span class="badge b-${esc(dev.status)}">${esc(dev.status)}</span>
+        <button class="ghost" id="btn-export">Export data</button>
+        <button class="danger" id="btn-revoke">Revoke</button>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div class="panel"><h2>Live location
+          <button class="ghost" id="btn-locate">Locate now</button></h2>
+          ${renderMap(loc, zones, trail)}</div>
+
+        <div class="panel">
+          <h2>Recent activity</h2>
+          <div class="tabs" id="kind-tabs">
+            ${[["","All"],["location","Location"],["sms","Messages"],["call","Calls"],["app","Apps"]].map(([k,l]) =>
+              `<button data-kind="${k}" class="${(state.timelineKind||"")===k?"on":""}">${l}</button>`).join("")}
+          </div>
+          <div id="tl"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="cards" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+          <div class="card"><div class="k">Battery</div><div class="v">${dev.battery ?? "—"}${dev.battery!=null?"%":""}
+            <div class="bar"><i style="width:${Math.min(100,dev.battery||0)}%"></i></div></div></div>
+          <div class="card"><div class="k">Last sync</div><div class="v" style="font-size:16px">${dev.last_seen?esc(ago(Math.floor(Date.now()/1000)-dev.last_seen)):"never"}</div></div>
+        </div>
+
+        <div class="panel">
+          <h2>Things to do</h2>
+          <div class="pad"><div class="actions">
+            <button data-cmd="locate_now">📍 Locate now</button>
+            <button data-cmd="ring">🔔 Ring device</button>
+            <button data-cmd="sync_now">🔄 Sync now</button>
+          </div>
+          <div id="cmd-out" style="margin-top:10px"></div>
+          <div style="margin-top:12px;font-size:11.5px;color:var(--dim)">
+            Commands are delivered on the device's next sync (≤5 min). The device shows a notification when a command runs.
+          </div></div>
+        </div>
+
+        <div class="panel">
+          <h2>Places watched <button class="ghost" id="btn-zone">+ Add place</button></h2>
+          <div id="zone-form"></div>
+          <div id="zones">
+            ${zones.length ? zones.map(z => `
+              <div style="padding:12px 16px;border-bottom:1px solid rgba(34,48,63,.55);display:flex;justify-content:space-between;align-items:center;gap:10px">
+                <div>
+                  <span class="badge b-${esc(z.kind)}">${esc(z.kind)}</span>
+                  <b style="margin-left:8px">${esc(z.name)}</b>
+                  <div class="mono" style="color:var(--dim);margin-top:3px">${z.radius_m}m radius · ${z.inside ? "currently inside" : "outside"}</div>
+                </div>
+                <button class="ghost" data-delzone="${esc(z.id)}">Remove</button>
+              </div>`).join("")
+              : `<div class="empty">No places yet. Add home and school to get arrival alerts.</div>`}
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Screen time & apps</h2>
+          <div class="pad">
+            <div class="row" style="align-items:flex-end">
+              <div class="field" style="flex:1;margin:0"><label>Allowed from</label><input id="st-start" type="time" value="07:00"></div>
+              <div class="field" style="flex:1;margin:0"><label>Allowed until</label><input id="st-end" type="time" value="21:30"></div>
+              <button id="btn-policy">Save</button>
+            </div>
+            <div style="margin-top:10px;font-size:11.5px;color:var(--dim)">
+              The device applies this on its next sync. Blocked apps: type a package name, comma separated.
+            </div>
+            <div class="field" style="margin-top:10px"><label>Blocked apps</label>
+              <input id="blocked" placeholder="com.tiktok, com.zhiliaoapp.musically"></div>
+            <div id="policy-out"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Alerts for ${esc(dev.owner_name)}</h2>
+          ${myAlerts.length ? myAlerts.slice(0,6).map(a => `
+            <div style="padding:11px 16px;border-bottom:1px solid rgba(34,48,63,.55);font-size:12.5px">
+              <span class="mono sev-${esc(a.severity)}" style="color:${a.severity==="critical"?"var(--sos)":a.severity==="high"?"var(--bad)":a.severity==="medium"?"var(--warn)":"var(--accent-2)"}">${esc(a.rule)}</span>
+              <div>${esc(a.message)}</div>
+              <div class="mono" style="color:var(--dim)">${esc(fmtTs(a.created_at*1000))}</div>
+            </div>`).join("") : `<div class="empty">Nothing yet.</div>`}
+        </div>
+      </div>
+    </div>`;
+
+  $("#back").onclick = e => { e.preventDefault(); state.page="home"; state.device=null; render(); };
+  $("#btn-revoke").onclick = async () => {
+    if(!confirm("Revoke this device? Collection stops immediately and its token is destroyed.\n\nData already collected is kept until you delete the device.")) return;
+    await api(`/api/devices/${id}/revoke`, { method:"POST" }); render();
+  };
+  $("#btn-export").onclick = async () => {
+    const data = await api(`/api/export/${id}`);
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = `sentinel-export-${id}.json`; a.click();
+  };
+  $("#btn-locate").onclick = () => sendCommand("locate_now");
+  document.querySelectorAll("[data-cmd]").forEach(b => b.onclick = () => sendCommand(b.dataset.cmd));
+  document.querySelectorAll("#kind-tabs button").forEach(b => b.onclick = () => {
+    state.timelineKind = b.dataset.kind || null; renderDevice(main);
+  });
+  document.querySelectorAll("[data-delzone]").forEach(b => b.onclick = async () => {
+    await api(`/api/zones/${b.dataset.delzone}`, { method:"DELETE" }); renderDevice(main);
+  });
+  $("#btn-zone").onclick = () => zoneForm(loc);
+  $("#btn-policy").onclick = async () => {
+    const out = $("#policy-out");
+    try{
+      const blocked = $("#blocked").value.split(",").map(s=>s.trim()).filter(Boolean);
+      await api(`/api/devices/${id}/policy`, { method:"PUT", body: JSON.stringify({
+        screen_time_start: $("#st-start").value, screen_time_end: $("#st-end").value, blocked_apps: blocked }) });
+      out.innerHTML = `<div class="ok-box" style="margin-top:12px">Saved. Applies on the next sync.</div>`;
+    } catch(e){ out.innerHTML = `<div class="err" style="margin-top:12px">${esc(e.message)}</div>`; }
+  };
+
+  // Prefill the policy form from current server state
+  const pol = liveData.policy || {};
+  if(pol.screen_time_start) $("#st-start").value = pol.screen_time_start;
+  if(pol.screen_time_end) $("#st-end").value = pol.screen_time_end;
+  if(pol.blocked_apps && pol.blocked_apps.length) $("#blocked").value = pol.blocked_apps.join(", ");
+
+  loadTimeline(id);
+}
+
+async function sendCommand(kind){
+  const out = $("#cmd-out");
+  try{
+    const r = await api(`/api/devices/${state.device}/commands`, { method:"POST", body: JSON.stringify({ kind }) });
+    out.innerHTML = `<div class="ok-box">${esc(kind.replace(/_/g," "))} queued. ${esc(r.note)}</div>`;
+    setTimeout(() => { if($("#cmd-out")) $("#cmd-out").innerHTML = ""; }, 6000);
+  } catch(e){ out.innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+
+function zoneForm(loc){
+  const box = $("#zone-form");
+  if(box.dataset.open === "1"){ box.innerHTML=""; box.dataset.open="0"; return; }
+  box.dataset.open = "1";
+  const lat = loc ? loc.lat : 19.0760, lon = loc ? loc.lon : 72.8777;
+  box.innerHTML = `<div class="pad" style="border-bottom:1px solid var(--line)">
+    <div class="row" style="align-items:flex-end">
+      <div class="field" style="flex:1;min-width:120px;margin:0"><label>Name</label><input id="z-name" placeholder="School"></div>
+      <div class="field" style="min-width:110px;margin:0"><label>Type</label>
+        <select id="z-kind"><option value="home">home</option><option value="school">school</option><option value="other">other</option></select></div>
+      <div class="field" style="min-width:100px;margin:0"><label>Radius (m)</label><input id="z-radius" type="number" value="200" min="50" max="5000"></div>
+      <button id="z-go">Add</button>
+    </div>
+    <div class="row" style="margin-top:10px;align-items:flex-end">
+      <div class="field" style="flex:1;margin:0"><label>Latitude</label><input id="z-lat" value="${lat.toFixed(5)}"></div>
+      <div class="field" style="flex:1;margin:0"><label>Longitude</label><input id="z-lon" value="${lon.toFixed(5)}"></div>
+    </div>
+    <div style="font-size:11.5px;color:var(--dim);margin-top:8px">Prefilled with the last known position — adjust to the school's actual entrance.</div>
+    <div id="z-out"></div></div>`;
+  $("#z-go").onclick = async () => {
+    try{
+      await api(`/api/devices/${state.device}/zones`, { method:"POST", body: JSON.stringify({
+        name: $("#z-name").value.trim() || "Place", kind: $("#z-kind").value,
+        lat: parseFloat($("#z-lat").value), lon: parseFloat($("#z-lon").value),
+        radius_m: parseInt($("#z-radius").value, 10) }) });
+      renderDevice($("#main"));
+    } catch(e){ $("#z-out").innerHTML = `<div class="err" style="margin-top:10px">${esc(e.message)}</div>`; }
+  };
+}
+
+async function loadTimeline(id){
+  const box = $("#tl");
+  const q = new URLSearchParams({ limit:"80" });
+  if(state.timelineKind) q.set("kind", state.timelineKind);
+  try{
+    const d = await api(`/api/devices/${id}/timeline?${q}`);
+    if(!d.events.length){ box.innerHTML = `<div class="empty">No records of this type yet.</div>`; return; }
+    box.innerHTML = `<table><thead><tr><th style="width:150px">When</th><th style="width:78px">Type</th><th>Detail</th></tr></thead><tbody>
+      ${d.events.map(e => {
+        let detail = "";
+        if(e.kind === "sms") detail = `<span class="mono">${esc(e.direction||"")} ${esc(e.counterpart||"")}</span><br>${esc(e.body||"")}`;
+        else if(e.kind === "call") detail = `<span class="mono">${esc(e.direction||"")} ${esc(e.counterpart||"")}</span> · ${e.duration||0}s`;
+        else if(e.kind === "location") detail = `<span class="mono">${e.lat?.toFixed(5)}, ${e.lon?.toFixed(5)}</span> · ±${Math.round(e.accuracy||0)}m`;
+        else if(e.kind === "sos") detail = `<b style="color:var(--sos)">SOS · ${esc(e.body||"")}</b>`;
+        else detail = `<span class="mono">${esc(e.body || e.payload || "")}</span>`;
+        return `<tr><td class="mono" style="color:var(--dim)">${fmtTs(e.ts)}</td>
+          <td><span class="badge" style="background:var(--panel-2);color:var(--txt)">${esc(e.kind)}</span></td>
+          <td>${detail}</td></tr>`;
+      }).join("")}</tbody></table>`;
+  }catch(e){ box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+/* ---------- alerts ---------- */
+async function renderAlerts(main){
+  main.innerHTML = `<h1>Alerts</h1><p class="sub">Arrivals, departures, SOS and device problems.</p><div id="al"><div class="empty">Loading…</div></div>`;
+  const d = await api("/api/alerts");
+  if(!d.alerts.length){ $("#al").innerHTML = `<div class="panel"><div class="empty">No alerts yet. They appear here as soon as a rule fires.</div></div>`; return; }
+  $("#al").innerHTML = `<div class="panel"><table><thead><tr><th>When</th><th>Child</th><th>Rule</th><th>Message</th><th></th></tr></thead><tbody>
+    ${d.alerts.map(a => `<tr>
+      <td class="mono" style="color:var(--dim);width:150px">${fmtTs(a.created_at*1000)}</td>
+      <td>${esc(a.label)}</td>
+      <td class="mono" style="color:${a.severity==="critical"?"var(--sos)":a.severity==="high"?"var(--bad)":a.severity==="medium"?"var(--warn)":"var(--accent-2)"}">${esc(a.rule)}</td>
+      <td>${esc(a.message)}</td>
+      <td>${a.acked_at ? `<span class="badge b-active">acked</span>` : `<button class="ghost" data-ack="${a.id}">Ack</button>`}</td>
+    </tr>`).join("")}</tbody></table></div>`;
+  document.querySelectorAll("[data-ack]").forEach(b => b.onclick = async () => {
+    await api(`/api/alerts/${b.dataset.ack}/ack`, { method:"POST" }); renderAlerts(main); refreshAlertPill();
+  });
+}
+
+/* ---------- audit ---------- */
+async function renderAudit(main){
+  main.innerHTML = `<h1>Audit log</h1><p class="sub">Every time location, messages or call data is read, it is recorded here.</p><div id="au"><div class="empty">Loading…</div></div>`;
+  try{
+    const d = await api("/api/audit");
+    $("#au").innerHTML = `<div class="panel"><table>
+      <thead><tr><th style="width:150px">When</th><th>Action</th><th>Target</th><th>IP</th><th>Detail</th></tr></thead><tbody>
+      ${d.entries.map(e => `<tr>
+        <td class="mono" style="color:var(--dim)">${fmtTs(e.ts*1000)}</td>
+        <td class="mono">${esc(e.action)}</td>
+        <td class="mono" style="color:var(--dim)">${esc(e.target||"—")}</td>
+        <td class="mono" style="color:var(--dim)">${esc(e.ip||"—")}</td>
+        <td class="mono" style="color:var(--dim)">${esc((e.detail||"").slice(0,80))}</td></tr>`).join("")}
+      </tbody></table></div>`;
+  }catch(e){ $("#au").innerHTML = `<div class="panel"><div class="empty">${esc(e.message)}</div></div>`; }
+}
+
+/* ---------- settings ---------- */
+async function renderSettings(main){
+  const me = state.me || await api("/api/me");
+  main.innerHTML = `<h1>Settings</h1><p class="sub">Account security for the parent console.</p>
+    <div class="panel"><h2>Two-factor authentication</h2><div class="pad" id="tfa">
+      ${me.user.totp_enabled
+        ? `<div class="ok-box">Two-factor is <b>on</b>. You'll be asked for a code when signing in.</div>`
+        : `<p style="margin:0 0 12px;color:var(--dim);font-size:13px">Protect the console with an authenticator app. This is the account that can see your child's location — a password alone is thin.</p>
+           <button id="btn-tfa">Set up two-factor</button>`}
+      <div id="tfa-out"></div>
+    </div></div>
+    <div class="panel"><h2>Family</h2><div class="pad">
+      <div class="mono" style="color:var(--dim)">${esc(me.org?.name||"")}</div>
+      <div class="mono" style="color:var(--dim)">${esc(me.user.email)} · ${esc(me.user.role)}</div>
+    </div></div>`;
+
+  const btn = $("#btn-tfa");
+  if(btn) btn.onclick = async () => {
+    const out = $("#tfa-out");
+    const r = await api("/api/auth/2fa/setup", { method:"POST" });
+    out.innerHTML = `<div class="notice" style="margin-top:14px">
+      <b>Secret:</b> <code>${esc(r.secret)}</code><br>
+      Add it to Google Authenticator / Authy / 1Password, then enter the 6-digit code below.<br>
+      <span style="color:var(--dim)">${esc(r.otpauth_uri)}</span></div>
+      <div class="row" style="align-items:flex-end">
+        <div class="field" style="flex:1;margin:0"><label>6-digit code</label><input id="tfa-code" inputmode="numeric" placeholder="123456"></div>
+        <button id="tfa-verify">Verify & enable</button>
+      </div>
+      <div id="tfa-msg"></div>`;
+    $("#tfa-verify").onclick = async () => {
+      try{
+        await api("/api/auth/2fa/enable", { method:"POST", body: JSON.stringify({ code: $("#tfa-code").value.trim() }) });
+        state.me = await api("/api/me"); renderSettings(main);
+        toast("Two-factor enabled", "You'll be asked for a code at sign-in.");
+      } catch(e){ $("#tfa-msg").innerHTML = `<div class="err" style="margin-top:10px">${esc(e.message)}</div>`; }
+    };
+  };
+}
+
+/* ---------- start ---------- */
+(async function(){
+  if(!state.token){ show("view-auth"); return; }
+  try{ await boot(); }catch{ show("view-auth"); }
+})();
+setInterval(() => { if(state.token) refreshAlertPill(); }, 45000);
+</script>
+</body>
+</html>

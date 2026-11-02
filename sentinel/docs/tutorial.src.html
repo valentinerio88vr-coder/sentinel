@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel — Complete Setup &amp; User Guide</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121821; --panel2:#182130; --line:#22303f; --line2:#2c3d50;
+    --txt:#e6edf5; --dim:#8ea0b5; --dim2:#6b7f95;
+    --accent:#3b82f6; --cyan:#22d3ee; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --sos:#dc2626;
+    --radius:14px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:24px}
+  body{
+    margin:0;background:var(--bg);color:var(--txt);
+    font:16px/1.7 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#0d131b;border:1px solid var(--line);
+       padding:1px 6px;border-radius:5px;color:#a5d8ff}
+  pre{background:#0a1119;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      overflow-x:auto;font-size:13.5px;line-height:1.65;margin:16px 0}
+  pre code{background:none;border:0;padding:0;color:#c8d6e5;font-size:13.5px}
+  .wrap{display:grid;grid-template-columns:280px minmax(0,1fr);max-width:1480px;margin:0 auto}
+  /* ---------- sidebar ---------- */
+  aside{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);
+        padding:26px 18px;background:var(--panel)}
+  aside .brand{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+  aside .brand img{width:38px;height:38px;border-radius:11px}
+  aside .brand b{font-size:15px;letter-spacing:.2px;display:block;line-height:1.25}
+  aside .brand span{display:block;font-size:10px;color:var(--dim);letter-spacing:1.1px;
+                     font-weight:700;margin-top:3px}
+  aside .ver{font-size:11px;color:var(--dim2);margin:0 0 20px 49px}
+  aside nav{display:flex;flex-direction:column;gap:2px}
+  aside nav a{
+    display:block;padding:7px 11px;border-radius:8px;color:var(--dim);font-size:13.5px;
+    font-weight:500;line-height:1.4;
+  }
+  aside nav a:hover{background:var(--panel2);color:var(--txt);text-decoration:none}
+  aside nav a.sub{padding-left:24px;font-size:12.5px;color:var(--dim2)}
+  aside nav .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--dim2);
+                 font-weight:700;margin:16px 0 6px 11px}
+  /* ---------- main ---------- */
+  main{padding:44px 52px 120px;max-width:1000px;min-width:0}
+  h1,h2,h3,h4{line-height:1.28;font-weight:700;letter-spacing:-.01em}
+  h1{font-size:38px;margin:0 0 14px}
+  h2{font-size:26px;margin:56px 0 16px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:18.5px;margin:34px 0 10px}
+  h4{font-size:15px;margin:24px 0 8px;color:var(--txt)}
+  p{margin:0 0 14px}
+  ul,ol{margin:0 0 16px;padding-left:24px}
+  li{margin:6px 0}
+  .lead{font-size:17.5px;color:var(--dim);margin-bottom:26px;line-height:1.65}
+  hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+  /* ---------- hero ---------- */
+  .hero{background:linear-gradient(135deg,rgba(59,130,246,.14),rgba(34,211,238,.07));
+        border:1px solid rgba(59,130,246,.28);border-radius:20px;padding:34px 36px;margin-bottom:36px}
+  .hero .top{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+  .hero img{width:66px;height:66px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .hero h1{margin:0}
+  .hero .sub{font-size:12px;letter-spacing:2.4px;color:var(--cyan);font-weight:700;text-transform:uppercase}
+  .hero p{color:#bcd3f0;margin-bottom:0;font-size:16px}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+  .badge{font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:99px;
+         background:rgba(148,163,184,.14);color:#cbd5e1}
+  .badge.ok{background:rgba(34,197,94,.15);color:#86efac}
+  .badge.warn{background:rgba(245,158,11,.15);color:#fcd34d}
+  .badge.info{background:rgba(59,130,246,.18);color:#93c5fd}
+  /* ---------- callouts ---------- */
+  .box{border-radius:12px;padding:15px 18px;margin:18px 0;font-size:14.5px;line-height:1.65}
+  .box .t{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
+  .box p:last-child{margin-bottom:0}
+  .box.info{background:rgba(59,130,246,.09);border:1px solid rgba(59,130,246,.3);color:#bcd3f0}
+  .box.info .t{color:#93c5fd}
+  .box.warn{background:rgba(245,158,11,.09);border:1px solid rgba(245,158,11,.32);color:#fde68a}
+  .box.warn .t{color:#fcd34d}
+  .box.danger{background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.32);color:#fca5a5}
+  .box.danger .t{color:#f87171}
+  .box.ok{background:rgba(34,197,94,.09);border:1px solid rgba(34,197,94,.3);color:#bbf7d0}
+  .box.ok .t{color:#86efac}
+  /* ---------- steps ---------- */
+  .step{display:grid;grid-template-columns:34px 1fr;gap:16px;margin:22px 0}
+  .step .n{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--cyan));
+           color:#04121f;font-weight:800;display:grid;place-items:center;font-size:15px}
+  .step .c{padding-top:3px;min-width:0}
+  .step .c h4{margin:0 0 6px;font-size:15.5px}
+  .step .c p{margin:0 0 8px}
+  .step .c p:last-child{margin-bottom:0}
+  /* ---------- figures ---------- */
+  figure{margin:22px 0}
+  figure img{width:100%;border-radius:12px;border:1px solid var(--line2);display:block}
+  figcaption{font-size:12.5px;color:var(--dim);margin-top:9px;text-align:center;font-style:italic}
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:18px 0}
+  th{text-align:left;padding:10px 14px;background:var(--panel2);color:var(--dim);
+     font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--line)}
+  td{padding:10px 14px;border-bottom:1px solid rgba(34,48,63,.6);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td code{white-space:nowrap}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+  .tag.get{background:rgba(34,197,94,.16);color:#86efac}
+  .tag.post{background:rgba(59,130,246,.18);color:#93c5fd}
+  .tag.put{background:rgba(245,158,11,.16);color:#fcd34d}
+  .tag.del{background:rgba(239,68,68,.16);color:#fca5a5}
+  /* ---------- misc ---------- */
+  .kbd{font-family:var(--mono);font-size:12px;background:#1a2432;border:1px solid var(--line2);
+       border-bottom-width:2px;border-radius:6px;padding:2px 7px;color:#dbe7f3;white-space:nowrap}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);
+           font-weight:700;margin-bottom:6px}
+  .tile p{margin:0;font-size:14px;color:#c8d6e5}
+  .toc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin:26px 0}
+  .toc ol{columns:2;column-gap:34px;margin:0;padding-left:20px}
+  .toc li{margin:5px 0;font-size:14px}
+  .skip{display:inline-block;font-size:13px;font-weight:600;margin-bottom:10px}
+  .checklist{list-style:none;padding-left:0}
+  .checklist li{padding-left:26px;position:relative;margin:8px 0}
+  .checklist li:before{content:"☐";position:absolute;left:0;color:var(--cyan);font-size:16px}
+  .filenav{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+  .filenav a{font-family:var(--mono);font-size:12.5px;background:var(--panel);border:1px solid var(--line);
+             padding:6px 12px;border-radius:8px;color:#a5d8ff}
+  @media (max-width:1080px){
+    .wrap{grid-template-columns:1fr}
+    aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+    main{padding:28px 22px 90px}
+    .toc ol{columns:1}
+    .grid2{grid-template-columns:1fr}
+    h1{font-size:29px}
+  }
+  @media print{
+    body{background:#fff;color:#111}
+    aside{display:none}.wrap{display:block}
+    main{padding:0;max-width:none}
+    h2{border-top-color:#ddd}
+    pre{background:#f6f8fa;border-color:#ddd}
+    pre code{color:#24292f}
+    .box{border-width:1px}
+    figure img{border-color:#ddd}
+    a{color:#0550ae}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<aside>
+  <div class="brand">
+    <img src="{{IMG:assets/sentinel.png}}" alt="Sentinel icon">
+    <b>Sentinel<span>USER GUIDE</span></b>
+  </div>
+  <div class="ver">v2.0 · Family Safety</div>
+  <nav>
+    <a href="#start">Getting started</a>
+    <a href="#what" class="sub">What this is</a>
+    <a href="#install" class="sub">Install &amp; run</a>
+    <a href="#icon" class="sub">Desktop icon</a>
+    <a href="#account" class="sub">Create your account</a>
+
+    <div class="grp">Daily use</div>
+    <a href="#adddevice">Add a child's phone</a>
+    <a href="#android">Build the Android app</a>
+    <a href="#enroll" class="sub">Enrol on the phone</a>
+    <a href="#zones" class="sub">Set up places</a>
+    <a href="#sos" class="sub">Set up SOS</a>
+    <a href="#policy" class="sub">Screen time &amp; apps</a>
+    <a href="#alerts">Reading alerts</a>
+    <a href="#conversation">The conversation</a>
+
+    <div class="grp">Reference</div>
+    <a href="#concepts">How it works</a>
+    <a href="#api">API reference</a>
+    <a href="#files">Files &amp; folders</a>
+    <a href="#cli">Command line</a>
+    <a href="#trouble">Troubleshooting</a>
+    <a href="#security">Security checklist</a>
+    <a href="#limits">Known limits</a>
+    <a href="#legal">Legal &amp; ethics</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="hero">
+  <div class="top">
+    <img src="{{IMG:assets/sentinel.png}}" alt="">
+    <div>
+      <div class="sub">Complete setup &amp; user guide</div>
+      <h1>Sentinel</h1>
+    </div>
+  </div>
+  <p>A self-hosted safety app for your own children's phones: live location, arrival alerts,
+     an SOS button, and screen-time controls. Everything runs on your computer — no subscriptions,
+     no third-party servers, no company reading your family's data.</p>
+  <div class="badges">
+    <span class="badge ok">Runs offline</span>
+    <span class="badge ok">Your data, your server</span>
+    <span class="badge info">Android 8.0+</span>
+    <span class="badge info">Windows · macOS · Linux</span>
+    <span class="badge warn">Consent-visible by design</span>
+  </div>
+</div>
+
+<div class="toc">
+  <strong style="font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim)">Contents</strong>
+  <ol>
+    <li><a href="#start">Getting started</a></li>
+    <li><a href="#install">Install and run</a></li>
+    <li><a href="#icon">Desktop icon &amp; autorun</a></li>
+    <li><a href="#account">Create your account</a></li>
+    <li><a href="#adddevice">Add a child's phone</a></li>
+    <li><a href="#android">Build the Android app</a></li>
+    <li><a href="#enroll">Enrol on the phone</a></li>
+    <li><a href="#zones">Set up places (geofences)</a></li>
+    <li><a href="#sos">Set up SOS</a></li>
+    <li><a href="#policy">Screen time &amp; app blocking</a></li>
+    <li><a href="#alerts">Reading alerts</a></li>
+    <li><a href="#conversation">The conversation to have first</a></li>
+    <li><a href="#concepts">How it works</a></li>
+    <li><a href="#api">API reference</a></li>
+    <li><a href="#files">Files &amp; folders</a></li>
+    <li><a href="#cli">Command line &amp; testing</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+    <li><a href="#security">Security checklist</a></li>
+    <li><a href="#limits">Known limits</a></li>
+    <li><a href="#legal">Legal &amp; ethics</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="start">1. Getting started</h2>
+
+<h3 id="what">What this is — and what it isn't</h3>
+
+<p>Sentinel has three parts:</p>
+
+<div class="grid2">
+  <div class="tile">
+    <div class="k">The console</div>
+    <p>A web page you open in your browser. Shows a map, arrival alerts, and a feed of activity.
+       This is what you look at.</p>
+  </div>
+  <div class="tile">
+    <div class="k">The server</div>
+    <p>A small program that runs on your computer. It stores everything and sends alerts to the
+       console. Nothing leaves your machine unless you configure it to.</p>
+  </div>
+</div>
+<div class="grid2" style="grid-template-columns:1fr">
+  <div class="tile">
+    <div class="k">The phone app</div>
+    <p>An Android app installed on your child's phone. It reports location, messages and calls to
+       your server, and carries the SOS button.</p>
+  </div>
+</div>
+
+<div class="box warn">
+  <span class="t">Read this before you install anything</span>
+  <p>The app is <strong>visible on your child's phone at all times</strong>. A permanent notification sits
+     in their status bar, they can open the app to see exactly what is shared, and they can switch it
+     off with one tap. That is not a limitation to work around — it is the design. Hidden monitoring
+     apps are the ones that get a child to stop trusting you, and in many countries they are illegal
+     even for a parent to install. See <a href="#legal">Legal &amp; ethics</a>.</p>
+</div>
+
+<h3>What you need</h3>
+<table>
+  <tr><th>Requirement</th><th>Details</th></tr>
+  <tr><td><strong>Python 3.10+</strong></td><td>On the computer that runs the server. Windows, macOS or Linux.</td></tr>
+  <tr><td><strong>An Android phone</strong></td><td>Android 8.0 (API 26) or newer. This is the phone being monitored.</td></tr>
+  <tr><td><strong>A home network</strong></td><td>The phone must be able to reach your computer. Same Wi-Fi makes this easy.</td></tr>
+  <tr><td><strong>Android Studio <span class="badge warn">optional</span></strong></td>
+      <td>Only if you want to build the phone app yourself. Anyone comfortable with a terminal can do it.</td></tr>
+</table>
+
+<div class="box info">
+  <span class="t">Time estimate</span>
+  <p>Server running: <strong>about 5 minutes</strong>. First phone enrolled and reporting:
+     <strong>30–45 minutes</strong>, most of it waiting for Android Studio to download the SDK.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="install">2. Install and run</h2>
+
+<h3>Option A — double-click the launcher (Windows)</h3>
+
+<p>In the project folder, double-click <code>run.bat</code>. It does everything for you:</p>
+
+<div class="step">
+  <div class="n">1</div><div class="c"><h4>Finds Python</h4>
+  <p>Checks for <code>py</code> or <code>python</code>. If neither exists it tells you exactly what to install.</p></div>
+</div>
+<div class="step">
+  <div class="n">2</div><div class="c"><h4>Creates a virtual environment</h4>
+  <p>An isolated Python installation in <code>.venv\</code> so nothing is installed system-wide.
+     First run only; subsequent runs skip this.</p></div>
+</div>
+<div class="step">
+  <div class="n">3</div><div class="c"><h4>Installs dependencies</h4>
+  <p>Four packages: FastAPI, Uvicorn, Pydantic and websockets. Needs internet once. A marker file
+     <code>.venv\.deps-ok</code> prevents reinstalling every time.</p></div>
+</div>
+<div class="step">
+  <div class="n">4</div><div class="c"><h4>Generates a signing secret</h4>
+  <p>Writes a random key to <code>data\secret.key</code>. This signs login sessions — if it changes,
+     everyone gets logged out. Keep it.</p></div>
+</div>
+<div class="step">
+  <div class="n">5</div><div class="c"><h4>Checks the port and starts</h4>
+  <p>If port 8000 is free, it starts the server and opens
+     <code>http://127.0.0.1:8000</code> in your browser automatically.</p></div>
+</div>
+
+<p>You should see something like this in the black window:</p>
+
+<pre><code>  ############################################
+  #   SENTINEL - Family Safety Console       #
+  ############################################
+
+  [1/5] Python found: 3.12.4
+  [2/5] Virtual environment ready
+  [3/5] Dependencies already installed
+  [4/5] Using existing signing secret
+  [5/5] Checking port 8000...
+
+  Starting Sentinel at http://127.0.0.1:8000
+  Press Ctrl+C or close this window to stop it.
+
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)</code></pre>
+
+<div class="box warn">
+  <span class="t">Keep the window open</span>
+  <p>Closing the black window stops the server. Alerts only reach you while it is running.
+     You can minimise it — that's what the desktop shortcut does.</p>
+</div>
+
+<h3>Option B — the terminal (macOS / Linux)</h3>
+
+<pre><code>cd sentinel
+./run.sh          # does the same five steps
+# or pick a different port:
+SENTINEL_PORT=9000 ./run.sh</code></pre>
+
+<h3>Option C — manual, if you'd rather see every step</h3>
+
+<pre><code>cd sentinel/backend
+python3 -m venv ../.venv
+source ../.venv/bin/activate          # Windows: ..\.venv\Scripts\activate
+
+pip install -r requirements.txt
+
+export SENTINEL_SECRET=$(python3 -c "import secrets;print(secrets.token_hex(32))")
+uvicorn app.main:app --host 0.0.0.0 --port 8000</code></pre>
+
+<div class="box info">
+  <span class="t">0.0.0.0 vs 127.0.0.1</span>
+  <p><code>127.0.0.1</code> accepts connections only from this computer — right for testing the console.
+     <code>0.0.0.0</code> lets other devices on your Wi-Fi connect, which you need once a real phone
+     is reporting. Use <code>0.0.0.0</code> when you get to <a href="#enroll">enrolment</a>.</p>
+</div>
+
+<h3>Option D — load a demo family</h3>
+
+<p>Want to see the console with realistic data before touching a real phone? With the server running:</p>
+
+<pre><code>cd sentinel
+.venv/bin/python tools/seed_demo.py        # Windows: .venv\Scripts\python tools\seed_demo.py</code></pre>
+
+<p>Creates two simulated children with home and school geofences, a day of movement, an SOS event
+and a set of alerts. Sign in with:</p>
+
+<pre><code>parent@sentinel.example.com
+SentinelDemo2026</code></pre>
+
+<div class="box ok">
+  <span class="t">Safe to experiment</span>
+  <p>This is simulated data generated locally. Nothing here touches a real phone or a real child.
+     Delete the account later by removing <code>backend/data/sentinel.db</code>.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="icon">3. Desktop icon &amp; autorun</h2>
+
+<h3>Windows — one click to install the icon</h3>
+
+<p>Double-click <code>install-desktop-icon.bat</code>. It creates <strong>Sentinel</strong> on your Desktop with a
+proper icon, pointed at <code>run.bat</code>.</p>
+
+<pre><code>  Creating a Sentinel shortcut on your Desktop...
+
+  Shortcut created: C:\Users\You\Desktop\Sentinel.lnk
+  Target:           C:\...\sentinel\run.bat
+  Icon:             C:\...\sentinel\assets\sentinel.ico
+
+  Done. Look for "Sentinel" on your Desktop.</code></pre>
+
+<p>The shortcut starts minimised, so the console window stays out of your way while the server runs.</p>
+
+<h4>Pin it to the taskbar or Start menu</h4>
+<ol>
+  <li>Find <strong>Sentinel</strong> on your Desktop.</li>
+  <li>Right-click → <strong>Show more options</strong> (Windows 11) → <strong>Pin to taskbar</strong>.</li>
+  <li>Or drag it onto the Start button to pin to Start.</li>
+</ol>
+
+<h4>Make it start with Windows (optional)</h4>
+<div class="step"><div class="n">1</div><div class="c">
+<p>Press <span class="kbd">Win</span> + <span class="kbd">R</span>, type <code>shell:startup</code>, press Enter.</p></div></div>
+<div class="step"><div class="n">2</div><div class="c">
+<p>Copy the <strong>Sentinel</strong> desktop shortcut into the folder that opens.</p></div></div>
+<div class="step"><div class="n">3</div><div class="c">
+<p>Reboot to confirm. The server starts minimised and the console is one click away.</p></div></div>
+
+<div class="box warn">
+  <span class="t">Only do this if the computer is always on</span>
+  <p>If the machine sleeps or shuts down, the server stops with it and the phone's reports queue
+     up until it returns. That's not data loss — the phone holds everything and uploads on
+     reconnect — but you won't get live alerts while the server is down.</p>
+</div>
+
+<h3>macOS / Linux</h3>
+
+<pre><code>./tools/make-desktop-icon.sh</code></pre>
+
+<p>On macOS this creates <code>~/Desktop/Sentinel.app</code> with the icon; on Linux it creates
+   <code>~/Desktop/sentinel.desktop</code>. Both simply open a terminal and run <code>run.sh</code>.</p>
+
+<h3>The icon itself</h3>
+
+<figure>
+  <img src="{{IMG:assets/sentinel.png}}" alt="Sentinel icon" style="max-width:200px;margin:0 auto">
+  <figcaption>A shield with a location pin — safety and place, the two things the app is for.</figcaption>
+</figure>
+
+<p>To regenerate it at any size (the <code>.ico</code> contains 16, 24, 32, 48, 64, 128 and 256&nbsp;px):</p>
+
+<pre><code>python tools/make_icon.py
+# writes assets/sentinel.ico and assets/sentinel.png</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="account">4. Create your account</h2>
+
+<p>Open <code>http://127.0.0.1:8000</code>. You'll see the sign-in screen:</p>
+
+<figure>
+  <img src="{{IMG:img/01-login.png}}" alt="Sentinel sign-in screen">
+  <figcaption>First run: click "Create one" to make your parent account.</figcaption>
+</figure>
+
+<div class="step"><div class="n">1</div><div class="c"><h4>Click "Create one"</h4>
+<p>Fill in a family name (e.g. <em>The Sharma Family</em>), your email, and a password of at least
+   10 characters.</p></div></div>
+<div class="step"><div class="n">2</div><div class="c"><h4>Sign in</h4>
+<p>You land on the Family page. With no devices yet, it says "No devices yet" — that's expected.</p></div></div>
+<div class="step"><div class="n">3</div><div class="c"><h4>Turn on two-factor now</h4>
+<p>Go to <strong>Settings → Set up two-factor</strong>. Scan the secret into Google Authenticator,
+   Authy or 1Password, then enter the 6-digit code.</p></div></div>
+
+<div class="box danger">
+  <span class="t">Do not skip step 3</span>
+  <p>This account shows where your child is at all times. A password alone is a thin lock — and if
+     someone gets in, they see everything. Two-factor takes two minutes to set up.</p>
+</div>
+
+<figure>
+  <img src="{{IMG:img/08-settings.png}}" alt="Settings page showing two-factor setup">
+  <figcaption>Settings holds account security. The secret is shown once; save it in your authenticator.</figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<h2 id="adddevice">5. Add a child's phone</h2>
+
+<p>This creates an <em>enrolment code</em> that links one phone to your account. It doesn't start
+monitoring — the phone has to accept the consent notice first.</p>
+
+<div class="step"><div class="n">1</div><div class="c"><h4>Click <strong>+ Add a device</strong></h4>
+<p>A panel opens at the top of the Family page.</p></div></div>
+<div class="step"><div class="n">2</div><div class="c"><h4>Fill in the four fields</h4>
+<p>Device name (<em>Aarav's phone</em>), the child's name, their email, and the relationship —
+   keep it on <strong>My child (parental)</strong>.</p></div></div>
+<div class="step"><div class="n">3</div><div class="c"><h4>Press <strong>Get code</strong></h4>
+<p>You get an 8-character code like <code class="mono">1CBCF32F</code>, valid for 60 minutes.</p></div></div>
+
+<figure>
+  <img src="{{IMG:img/03-add-device.png}}" alt="Add device panel with fields for device name, child name, email and relationship">
+  <figcaption>The add-device panel. Note the instruction: install it sitting next to your child.</figcaption>
+</figure>
+
+<div class="box info">
+  <span class="t">One code, one phone</span>
+  <p>Codes are single-use and expire after an hour. If one leaks or expires, just make another —
+     there's no limit. A used code can never be replayed.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="android">6. Build the Android app</h2>
+
+<div class="box danger">
+  <span class="t">Honest warning before you start</span>
+  <p>The Android project in <code>sentinel/android/</code> has <strong>not been compiled</strong> in the
+     environment where it was written — there was no Android SDK available. The code is complete and
+     written against API 34, but expect to fix a handful of small build errors on your first attempt.
+     Budget a couple of hours, not ten minutes. Everything below is the standard path.</p>
+</div>
+
+<h3>Install the tools</h3>
+
+<div class="step"><div class="n">1</div><div class="c"><h4>Install Android Studio</h4>
+<p>Download from <a href="https://developer.android.com/studio" target="_blank" rel="noopener">developer.android.com/studio</a>.
+   It bundles the SDK, the build tools and a JDK.</p></div></div>
+<div class="step"><div class="n">2</div><div class="c"><h4>Run the setup wizard</h4>
+<p>Accept the defaults. When it finishes, go to <strong>More Actions → SDK Manager → SDK Platforms</strong>
+   and tick <strong>Android 14.0 (API 34)</strong>. Then open the <strong>SDK Tools</strong> tab and confirm
+   <strong>Android SDK Build-Tools</strong> is installed.</p></div></div>
+<div class="step"><div class="n">3</div><div class="c"><h4>Open the project</h4>
+<p><strong>File → Open</strong>, choose the <code>sentinel/android</code> folder (not the parent folder).
+   Let Gradle sync finish — the first one downloads dependencies.</p></div></div>
+
+<h3>Build the APK</h3>
+
+<p><strong>In Android Studio:</strong> <strong>Build → Build Bundle(s) / APK(s) → Build APK(s)</strong>.
+The APK lands in <code>android/app/build/outputs/apk/debug/app-debug.apk</code>.</p>
+
+<p><strong>Or from a terminal:</strong></p>
+
+<pre><code>cd sentinel/android
+./gradlew assembleDebug
+
+# Windows:
+gradlew.bat assembleDebug</code></pre>
+
+<h3>Install it on the phone</h3>
+
+<div class="step"><div class="n">1</div><div class="c"><h4>Enable developer options</h4>
+<p>On the phone: <strong>Settings → About phone</strong> → tap <strong>Build number</strong> seven times.</p></div></div>
+<div class="step"><div class="n">2</div><div class="c"><h4>Enable USB debugging</h4>
+<p><strong>Settings → System → Developer options → USB debugging</strong> → On.</p></div></div>
+<div class="step"><div class="n">3</div><div class="c"><h4>Connect and install</h4>
+<pre><code>adb devices                        # the phone should appear; accept the prompt on it
+adb install app/build/outputs/apk/debug/app-debug.apk</code></pre></div></div>
+
+<div class="box info">
+  <span class="t">No cable?</span>
+  <p>Copy the APK to the phone by any means (USB storage, a file-transfer app, Google Drive), then
+     open it on the phone and allow "Install unknown apps" for your file manager when prompted.</p>
+</div>
+
+<h3>What the app does and doesn't collect</h3>
+
+<table>
+  <tr><th>Collected</th><th>Never collected</th></tr>
+  <tr>
+    <td>
+      <ul style="margin:0">
+        <li>SMS messages <span class="badge warn">one-time codes filtered out on the phone</span></li>
+        <li>Call log — number, time, duration</li>
+        <li>Last known location at each sync</li>
+        <li>List of installed apps</li>
+        <li>SOS button presses</li>
+      </ul>
+    </td>
+    <td>
+      <ul style="margin:0">
+        <li>WhatsApp, Telegram, Signal or any app's messages</li>
+        <li>Photos, files, keystrokes, screenshots</li>
+        <li>Microphone, camera, screen recording</li>
+        <li>Passwords or banking credentials</li>
+        <li>One-time passcodes</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="enroll">7. Enrol on the phone</h2>
+
+<div class="box warn">
+  <span class="t">Do this sitting next to your child</span>
+  <p>Not at the kitchen table with the phone, not while they're at school. Read the consent screen
+     with them. The first five minutes decide whether this app stays on the phone.</p>
+</div>
+
+<h3>Find your computer's address</h3>
+
+<p>The phone needs to reach your server over the network. On the computer:</p>
+
+<pre><code># Windows
+ipconfig
+# look for IPv4 Address, e.g. 192.168.1.42
+
+# macOS / Linux
+ifconfig | grep "inet "
+# or: ip addr show</code></pre>
+
+<p>Your server address is then <code>http://192.168.1.42:8000</code> — <strong>not</strong>
+   <code>127.0.0.1</code>, because on the phone that means "the phone itself".</p>
+
+<div class="box warn">
+  <span class="t">Start the server with the right host</span>
+  <p>If you used <code>run.bat</code>, it binds to <code>127.0.0.1</code> and the phone
+     <em>cannot</em> connect. To allow other devices, run with <code>0.0.0.0</code>:</p>
+  <pre style="margin:10px 0 0"><code>cd sentinel/backend
+..\.venv\Scripts\python -m uvicorn app.main:app --host 0.0.0.0 --port 8000</code></pre>
+</div>
+
+<h3>Walkthrough</h3>
+
+<div class="step"><div class="n">1</div><div class="c"><h4>Open Sentinel Agent on the phone</h4>
+<p>If Android warns about an unknown app, that's expected for a self-built APK.</p></div></div>
+<div class="step"><div class="n">2</div><div class="c"><h4>Enter the server address</h4>
+<p><code>http://192.168.1.42:8000</code> — with <code>http://</code> and no trailing slash.</p></div></div>
+<div class="step"><div class="n">3</div><div class="c"><h4>Enter the 8-character code</h4>
+<p>The one from step 5. Not case-sensitive.</p></div></div>
+<div class="step"><div class="n">4</div><div class="c"><h4>Read the consent notice together</h4>
+<p>It lists exactly what is shared and what is not. Scroll to the bottom.</p></div></div>
+<div class="step"><div class="n">5</div><div class="c"><h4>Your child ticks the box</h4>
+<p>Let them do it. It's their phone and their decision.</p></div></div>
+<div class="step"><div class="n">6</div><div class="c"><h4>Grant permissions, then tap the button again</h4>
+<p>Android asks for SMS, call log, location and notifications. All are needed — with any refused,
+   that type of data simply won't be reported.</p></div></div>
+<div class="step"><div class="n">7</div><div class="c"><h4>Allow location "all the time" (optional)</h4>
+<p>Android will ask. Without it, location is only reported while the app is open. With it, reports
+   arrive in the background. It's a fair thing to discuss, not to click through.</p></div></div>
+
+<h3>Confirm it worked</h3>
+
+<ul>
+  <li>The phone shows a permanent notification: <em>"Sentinel is sharing with your parent"</em>.</li>
+  <li>Within a minute or two, the console shows the device as <span class="badge ok">active</span>.</li>
+  <li>Open the device page — a location appears once the first sync completes.</li>
+</ul>
+
+<div class="box info">
+  <span class="t">If nothing appears</span>
+  <p>Syncs run on a 15-minute schedule, so the first report can take a little while. To force one:
+     open the app on the phone, or on the console use <strong>Locate now</strong> and wait for the next
+     sync. See <a href="#trouble">Troubleshooting</a> if it stays empty.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="zones">8. Set up places (geofences)</h2>
+
+<p>A geofence is a circle on the map. When your child enters or leaves it, you get an alert. Two
+places cover most of the value: <strong>home</strong> and <strong>school</strong>.</p>
+
+<div class="step"><div class="n">1</div><div class="c"><h4>Open the child's page</h4>
+<p>From the Family page, click their card.</p></div></div>
+<div class="step"><div class="n">2</div><div class="c"><h4>Click <strong>+ Add place</strong></h4>
+<p>Under "Places watched" on the right.</p></div></div>
+<div class="step"><div class="n">3</div><div class="c"><h4>Name it and pick a type</h4>
+<p><em>School</em> is worth using over <em>other</em> — arrival and departure alerts for a school zone
+   are marked higher priority.</p></div></div>
+<div class="step"><div class="n">4</div><div class="c"><h4>Set the radius</h4>
+<p>The form pre-fills with your child's last known position, which is usually <em>not</em> the school
+   gate. Adjust the coordinates, or set a generous radius. Guidance below.</p></div></div>
+
+<figure>
+  <img src="{{IMG:img/05-add-zone.png}}" alt="Add place form with name, type, radius, latitude and longitude">
+  <figcaption>Coordinates default to the last known position — replace them with the actual entrance.</figcaption>
+</figure>
+
+<h3>Choosing a radius</h3>
+
+<table>
+  <tr><th>Radius</th><th>Good for</th><th>Trade-off</th></tr>
+  <tr><td><code>150 m</code></td><td>Home, if you're in a detached house</td>
+      <td>Flappy in dense apartment blocks — GPS drift crosses the line repeatedly</td></tr>
+  <tr><td><code>200–300 m</code> <span class="badge ok">recommended</span></td>
+      <td>School, a friend's building, home in a city</td>
+      <td>Occasional alert a minute or two early or late</td></tr>
+  <tr><td><code>500 m+</code></td><td>A whole campus or neighbourhood</td>
+      <td>Misses the difference between "at school" and "two streets away"</td></tr>
+</table>
+
+<div class="box ok">
+  <span class="t">The app already handles GPS noise</span>
+  <p>A location fix whose accuracy circle is wider than the zone radius is ignored entirely.
+     Entering a 250&nbsp;m school zone on a 900&nbsp;m cell-tower fix produces no alert, because
+     it would be a guess. The first fix after adding a zone sets a baseline without firing anything,
+     and repeat alerts are suppressed to one per zone per direction per hour.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sos">9. Set up SOS</h2>
+
+<p>This is the feature that earns the app its place on the phone. Your child can trigger it from the
+   lock screen in two taps, without unlocking.</p>
+
+<div class="step"><div class="n">1</div><div class="c"><h4>On the phone, pull down the notification shade twice</h4>
+<p>To reveal the full quick-settings grid.</p></div></div>
+<div class="step"><div class="n">2</div><div class="c"><h4>Tap the pencil / edit icon</h4>
+<p>The tile editor. You may need to swipe to a second page of tiles and drag from "Hold and drag to add tiles".</p></div></div>
+<div class="step"><div class="n">3</div><div class="c"><h4>Drag the <strong>SOS</strong> tile into the grid</h4>
+<p>Put it somewhere easy to hit — top-left is often easiest with a thumb.</p></div></div>
+<div class="step"><div class="n">4</div><div class="c"><h4>Test it</h4>
+<p>Tell your child you're testing, tap SOS, and watch the console. You should get a red
+   <strong>EMERGENCY ALERT</strong> banner and a toast notification within a few seconds.</p></div></div>
+
+<div class="box info">
+  <span class="t">Why quick settings and not a power-button shortcut</span>
+  <p>Quick-settings tiles are reachable from the lock screen on every Android version without
+     granting extra permissions. Power-button shortcuts vary by manufacturer and often require
+     accessibility permissions, which are broad and hard to justify.</p>
+</div>
+
+<p>There is also an <strong>SOS — alert my parent now</strong> button inside the app, on the status
+   screen, for when the phone is already unlocked.</p>
+
+<h3>What happens when SOS fires</h3>
+<ol>
+  <li>The event is written to the phone's local outbox immediately — it works with no signal.</li>
+  <li>On the next successful sync it uploads and becomes a <code>critical</code> alert.</li>
+  <li>The console shows a red banner at the top of every page and a toast, pushed over a live socket.</li>
+  <li>It stays until you acknowledge it.</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="policy">10. Screen time &amp; app blocking</h2>
+
+<p>On the child's page, under <strong>Screen time &amp; apps</strong>, set an allowed window
+   (e.g. <code>06:30</code> to <code>21:30</code>) and list any apps to block by package name
+   (e.g. <code>com.tiktok, com.zhiliaoapp.musically</code>).</p>
+
+<div class="box warn">
+  <span class="t">This one is stored and delivered, not enforced</span>
+  <p>The server saves the policy and hands it to the phone on the next sync, and the phone stores it —
+     but the Android agent does <strong>not yet apply</strong> it. Enforcing a screen-time window means
+     using <code>DevicePolicyManager</code> (which needs device-owner provisioning) or an accessibility
+     service. That work is not done. Don't promise your child it will lock their apps, because it won't.</p>
+</div>
+
+<p>To find an app's package name: <strong>Play Store → the app → Share</strong>, and read the
+   <code>?id=</code> parameter in the link.</p>
+
+<!-- ============================================================ -->
+<h2 id="alerts">11. Reading alerts</h2>
+
+<figure>
+  <img src="{{IMG:img/06-alerts.png}}" alt="Alerts list showing zone enter and exit alerts plus SOS">
+  <figcaption>Alerts are ordered newest first. Acknowledge them to clear the badge.</figcaption>
+</figure>
+
+<table>
+  <tr><th>Rule</th><th>Severity</th><th>What it means</th></tr>
+  <tr><td><code>sos</code></td><td class="tag del">critical</td>
+      <td>Your child pressed the SOS button. Treat it as real until proven otherwise.</td></tr>
+  <tr><td><code>zone_enter</code></td><td class="tag get">info / high</td>
+      <td>Arrived at a watched place. <em>High</em> when the place is typed <em>school</em>.</td></tr>
+  <tr><td><code>zone_exit</code></td><td class="tag get">info / high</td>
+      <td>Left a watched place. Includes distance from the centre.</td></tr>
+  <tr><td><code>device_offline</code></td><td class="tag put">medium</td>
+      <td>No sync for over an hour. Usually flat battery or no signal — check before worrying.</td></tr>
+  <tr><td><code>app_installed</code></td><td class="tag get">info</td>
+      <td>A new app appeared on the phone.</td></tr>
+  <tr><td><code>unusually_long_call</code></td><td class="tag get">info</td>
+      <td>A call over an hour. Almost always benign.</td></tr>
+</table>
+
+<h3>The device page</h3>
+
+<figure>
+  <img src="{{IMG:img/04-device.png}}" alt="Device page with map, geofences, activity feed, commands and settings">
+  <figcaption>Map, movement trail, activity feed, remote commands, places and policy in one screen.</figcaption>
+</figure>
+
+<h4>Remote commands</h4>
+<ul>
+  <li><strong>Locate now</strong> — asks the phone for a fresh fix. Note it returns the phone's last
+      known position, so if the phone has been still, the answer is the same.</li>
+  <li><strong>Ring device</strong> — plays the alarm at full volume for 15 seconds. Useful for a lost
+      phone, and <em>very</em> obvious to whoever is holding it. That's deliberate.</li>
+  <li><strong>Sync now</strong> — nudges an immediate upload.</li>
+</ul>
+
+<div class="box info">
+  <span class="t">Commands are not instant</span>
+  <p>They queue on the server and the phone picks them up on its next sync — up to 15 minutes.
+     The phone shows a notification when one runs. There is no silent command channel.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="conversation">12. The conversation to have first</h2>
+
+<p>This is the part most guides skip, and it matters more than any setting.</p>
+
+<div class="box info">
+  <span class="t">A script that works better than "because I said so"</span>
+  <p><em>"I've put an app on your phone. It shares your location with me, and it has an SOS button you
+     can press from the lock screen if you ever need me fast. It also shows me your messages and calls —
+     I'm telling you that because you can see it all yourself in the app, and you can switch it off
+     whenever you want. I'd rather you knew than didn't."</em></p>
+</div>
+
+<h4>Things that make it go badly</h4>
+<ul>
+  <li><strong>Installing it secretly.</strong> They will find the notification. Then the app is a lie,
+      not a safety net, and it comes off.</li>
+  <li><strong>Using location as an accusation.</strong> "You were at Rohan's house, not at tuition."
+      Do that twice and they'll leave the phone at home — you've made them less safe, not more.</li>
+  <li><strong>Reading message content as your first move.</strong> Location and SOS are the safety
+      features. Reading a 15-year-old's messages is a different act with a different cost. Decide
+      deliberately, ideally before you install it.</li>
+  <li><strong>Pretending it can't be turned off.</strong> It can. Saying otherwise is the fastest way
+      to be caught in a lie.</li>
+</ul>
+
+<h4>Things that make it go well</h4>
+<ul>
+  <li>Install it together, and let them tick the consent box.</li>
+  <li>Tell them what triggers an alert <em>before</em> it happens, so an alert is never an ambush.</li>
+  <li>Agree a sunset: "we'll review this in three months."</li>
+  <li>If they switch it off, treat that as information, not a technical failure to route around.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="concepts">13. How it works</h2>
+
+<h3>Data flow</h3>
+
+<pre><code>┌────────────────┐   enrol + consent    ┌──────────────────────────────────────┐
+│ Sentinel Agent │ ────────────────────► │  FastAPI server (your computer)      │
+│ (Android)      │ ◄──── device token ── │                                      │
+│                │                       │  POST /api/sync ──► events (deduped) │
+│ • SMS          │   POST /api/sync      │        │                             │
+│ • Call log     │ ────────────────────► │        ├──► job queue                │
+│ • Location     │   ◄── commands ────── │        │      ├─ alert rules         │
+│ • App list     │   ──► acks ─────────► │        │      ├─ geofence checks    │
+│ • SOS tile     │                       │        │      └─ offline sweeps     │
+│                │                       │        ▼                             │
+└────────────────┘                       │   WebSocket /ws ──► console          │
+        │                                │   audit log (every read)             │
+        │ permanent notification         └──────────────────────────────────────┘
+        └► child can stop at any time
+</code></pre>
+
+<h3>Design decisions worth knowing</h3>
+
+<h4>The upload path stays fast</h4>
+<p>The phone's upload endpoint only writes rows and queues a job. Alert rules, geofence maths and
+   offline sweeps run in a separate worker thread. A slow rule can never stall a child's upload.</p>
+
+<h4>The job queue is real</h4>
+<p>Jobs are claimed atomically — two workers can't take the same one. Failures retry with exponential
+   backoff up to five attempts, then sit visibly in a <code>failed</code> state instead of vanishing.
+   A worker that dies mid-job has its lease reclaimed after two minutes.</p>
+
+<h4>Duplicates are impossible</h4>
+<p>Every event carries a fingerprint (SHA-256 of its contents). Send the same batch five times and the
+   timeline still shows one copy. This matters because phones retry aggressively on bad connections.</p>
+
+<h4>The phone holds its own queue</h4>
+<p>No signal for a day? The app stores up to 5,000 events on the device and uploads them when the
+   connection returns. Nothing is lost by being offline.</p>
+
+<h4>Everything is auditable</h4>
+<p>Every time location data is read — by a map view or an export — it's written to an audit log with
+   the account, IP and timestamp. You can show your child exactly who looked and when.</p>
+
+<h3>Data storage</h3>
+<p>One SQLite file: <code>backend/data/sentinel.db</code>. Back it up by copying that file. Delete it
+   to wipe everything. No cloud, no replication, no third party.</p>
+
+<!-- ============================================================ -->
+<h2 id="api">14. API reference</h2>
+
+<p>Full interactive docs at <code>http://127.0.0.1:8000/api/docs</code>.</p>
+
+<h3>Parent console (session token)</h3>
+<table>
+  <tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/auth/register</code></td><td>Create an account</td></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/auth/login</code></td><td>Sign in; returns <code>totp_required</code> if 2FA is on</td></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/auth/2fa/setup</code> · <code>/enable</code></td><td>Enrol an authenticator</td></tr>
+  <tr><td><span class="tag get">GET</span></td><td><code>/api/devices</code></td><td>List devices with last location and current zone</td></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/devices</code></td><td>Create a device, get an enrolment code</td></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/devices/{id}/pause</code> · <code>/resume</code> · <code>/revoke</code></td><td>Kill switch</td></tr>
+  <tr><td><span class="tag del">DEL</span></td><td><code>/api/devices/{id}</code></td><td>Delete device and purge its data</td></tr>
+  <tr><td><span class="tag get">GET</span> <span class="tag post">POST</span></td><td><code>/api/devices/{id}/zones</code></td><td>List / create geofences</td></tr>
+  <tr><td><span class="tag del">DEL</span></td><td><code>/api/zones/{id}</code></td><td>Remove a geofence</td></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/devices/{id}/commands</code></td><td>Queue locate_now · ring · sync_now</td></tr>
+  <tr><td><span class="tag put">PUT</span></td><td><code>/api/devices/{id}/policy</code></td><td>Screen-time window, blocked apps</td></tr>
+  <tr><td><span class="tag get">GET</span></td><td><code>/api/devices/{id}/live</code></td><td>Location, zones, policy</td></tr>
+  <tr><td><span class="tag get">GET</span></td><td><code>/api/devices/{id}/timeline</code></td><td>Paged activity feed (<code>kind</code>, <code>limit</code>, <code>since</code>)</td></tr>
+  <tr><td><span class="tag get">GET</span></td><td><code>/api/devices/{id}/stats</code></td><td>Counts by type, last 24h, top contacts</td></tr>
+  <tr><td><span class="tag get">GET</span></td><td><code>/api/alerts</code></td><td>List alerts; <code>?unacked=true</code> to filter</td></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/alerts/{id}/ack</code></td><td>Acknowledge an alert</td></tr>
+  <tr><td><span class="tag get">GET</span></td><td><code>/api/audit</code></td><td>Access log (owner only)</td></tr>
+  <tr><td><span class="tag get">GET</span></td><td><code>/api/export/{id}</code></td><td>Full JSON export of one device</td></tr>
+</table>
+
+<h3>Phone endpoints (device token)</h3>
+<table>
+  <tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/enroll/claim</code></td><td>Exchange enrolment code + consent for a device token</td></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/sync</code></td><td>Upload up to 500 events; returns queued commands</td></tr>
+  <tr><td><span class="tag get">GET</span></td><td><code>/api/device/config</code></td><td>Kill switch state and policy</td></tr>
+  <tr><td><span class="tag post">POST</span></td><td><code>/api/device/commands/ack</code></td><td>Report a command result</td></tr>
+</table>
+
+<h3>Live updates</h3>
+<pre><code>ws://127.0.0.1:8000/ws?token=&lt;session-token&gt;
+
+{"topic":"alert","data":{"rule":"sos","severity":"critical","message":"..."}}
+{"topic":"sync","data":{"device_id":"dev_...","accepted":14,"battery":63}}
+{"topic":"command","data":{"id":"cmd_...","status":"pending"}}
+{"topic":"ping","data":{"t":1793612000}}</code></pre>
+
+<h3>Event kinds</h3>
+<p><code>sms</code> · <code>call</code> · <code>location</code> · <code>app</code> ·
+   <code>contact</code> · <code>network</code> · <code>sos</code></p>
+
+<!-- ============================================================ -->
+<h2 id="files">15. Files &amp; folders</h2>
+
+<div class="filenav">
+  <a href="#">run.bat</a><a href="#">run.sh</a><a href="#">install-desktop-icon.bat</a>
+  <a href="#">assets/</a><a href="#">backend/</a><a href="#">web/</a>
+  <a href="#">android/</a><a href="#">tools/</a><a href="#">docs/</a>
+</div>
+
+<pre><code>sentinel/
+├── run.bat                     Windows launcher — double-click this
+├── run.sh                      macOS / Linux launcher
+├── install-desktop-icon.bat    Creates the Desktop shortcut
+├── README.md                   Developer-facing overview
+├── TUTORIAL.html               This guide
+├── assets/
+│   ├── sentinel.ico            Multi-size Windows icon
+│   └── sentinel.png            512px icon
+├── backend/
+│   ├── requirements.txt
+│   ├── app/
+│   │   ├── main.py             All HTTP + WebSocket endpoints
+│   │   ├── db.py               Storage, migrations, thread-local connections
+│   │   ├── queue.py            Job queue: claim, retry, lease reaping
+│   │   ├── jobs.py             Alert rules, geofence sweeps, offline checks
+│   │   ├── geofence.py         Distance maths and transition detection
+│   │   ├── auth.py             Password hashing, signed session tokens
+│   │   ├── totp.py             Two-factor (RFC 6238, stdlib only)
+│   │   ├── bus.py              In-process pub/sub for live updates
+│   │   └── migrations/
+│   │       └── 001_init.sql    Versioned schema
+│   └── data/
+│       ├── sentinel.db         ALL YOUR DATA — back this up
+│       └── secret.key          Session signing key — keep private
+├── web/
+│   └── index.html              The console (single file, no build step)
+├── android/                    Kotlin agent (Android Studio project)
+│   └── app/src/main/java/com/sentinel/agent/
+│       ├── EnrollActivity.kt   Consent gate
+│       ├── MonitorService.kt   Foreground service + notification
+│       ├── SyncWorker.kt       15-minute sync schedule
+│       ├── Collectors.kt       SMS / calls / location / apps + OTP filter
+│       ├── CommandRunner.kt    Executes locate_now, ring, sync_now
+│       ├── SosTileService.kt   Lock-screen SOS tile
+│       └── StatusActivity.kt   "What is shared" screen + stop button
+├── tools/
+│   ├── seed_demo.py            Load a simulated family
+│   ├── simulate.py             Virtual phone for development
+│   ├── e2e_test.py             73-check test suite
+│   ├── make_icon.py            Regenerate the icon
+│   ├── make-shortcut.ps1       Shortcut creation (PowerShell)
+│   └── make-desktop-icon.sh    macOS / Linux launcher
+└── docs/
+    ├── LEGAL.md                Per-jurisdiction compliance notes
+    └── img/                    Screenshots used in this guide</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="cli">16. Command line &amp; testing</h2>
+
+<h3>Run the test suite</h3>
+
+<p>73 checks covering auth, 2FA, enrolment, consent enforcement, ingest and dedupe, the job queue,
+   geofencing with hysteresis, the command channel, policy delivery, audit logging and deletion.
+   Needs the server running.</p>
+
+<pre><code>cd sentinel
+.venv/bin/python tools/e2e_test.py
+# Windows: .venv\Scripts\python tools\e2e_test.py
+
+# against a different host:
+.venv/bin/python tools/e2e_test.py http://192.168.1.42:8000</code></pre>
+
+<p>Expected output ends with:</p>
+
+<pre><code>73 passed, 0 failed</code></pre>
+
+<h3>Simulate a phone</h3>
+
+<p>Useful for developing without a device. Claims a code exactly the way the Android app does, then
+   posts realistic traffic through the real ingest API.</p>
+
+<pre><code>.venv/bin/python tools/simulate.py --code ABCD1234 --days 3 \
+    --base http://127.0.0.1:8000</code></pre>
+
+<h3>Inspect with curl</h3>
+
+<pre><code># health, queue depth and live subscriber count
+curl http://127.0.0.1:8000/api/health
+
+# sign in and keep the token
+TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"your-password"}' | python3 -c "import json,sys;print(json.load(sys.stdin)['token'])")
+
+# list devices
+curl -s http://127.0.0.1:8000/api/devices -H "Authorization: Bearer $TOKEN"</code></pre>
+
+<h3>Reset everything</h3>
+
+<div class="box danger">
+  <span class="t">This deletes all data permanently</span>
+  <p>Stop the server first, then delete the database file. There is no undo.</p>
+</div>
+
+<pre><code># stop the server (Ctrl+C), then:
+rm backend/data/sentinel.db*        # Windows: del backend\data\sentinel.db*
+# start again — it rebuilds an empty database and you create a new account</code></pre>
+
+<h3>Back up</h3>
+
+<pre><code># with the server stopped, copy the whole data folder
+cp -r backend/data backups/$(date +%Y-%m-%d)
+# Windows: xcopy backend\data backups\%DATE%\ /E /I</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="trouble">17. Troubleshooting</h2>
+
+<table>
+  <tr><th style="width:26%">Symptom</th><th>Cause and fix</th></tr>
+  <tr>
+    <td><strong>"Python was not found"</strong></td>
+    <td>Python isn't installed or isn't on PATH. Install from
+        <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> and
+        <strong>tick "Add python.exe to PATH"</strong> during setup, then re-run <code>run.bat</code>.</td>
+  </tr>
+  <tr>
+    <td><strong>Port 8000 already in use</strong></td>
+    <td>Something else is using it, or Sentinel is already running. Check
+        <code>http://127.0.0.1:8000</code> in a browser. To use another port:
+        <code>SENTINEL_PORT=9000 ./run.sh</code>, or edit <code>PORT=</code> in <code>run.bat</code>.</td>
+  </tr>
+  <tr>
+    <td><strong>PowerShell won't run the shortcut script</strong></td>
+    <td>Execution policy. The .bat passes <code>-ExecutionPolicy Bypass</code> itself, so run
+        <code>install-desktop-icon.bat</code>, not the .ps1 directly. Or run:
+        <code>powershell -ExecutionPolicy Bypass -File tools\make-shortcut.ps1 -Root .</code></td>
+  </tr>
+  <tr>
+    <td><strong>Desktop icon is blank / generic</strong></td>
+    <td>Windows icon cache. Press <span class="kbd">Win</span>+<span class="kbd">R</span>, run
+        <code>ie4uinit.exe -show</code>. If that fails, delete <code>%LocalAppData%\IconCache.db</code>
+        and restart Explorer.</td>
+  </tr>
+  <tr>
+    <td><strong>Bottom-left says "reconnecting…"</strong></td>
+    <td>The live socket is down — alerts won't pop up. Usually a missing
+        <code>websockets</code> package: run
+        <code>.venv\Scripts\pip install websockets</code> and restart. Check the server console for
+        <code>No supported WebSocket library detected</code>.</td>
+  </tr>
+  <tr>
+    <td><strong>Console logs you out immediately</strong></td>
+    <td>The signing secret changed (server restarted without <code>data/secret.key</code>), or a
+        request failed with 401. Sign in again. If it repeats, delete <code>data/secret.key</code>,
+        restart, and sign in once more to get a fresh key.</td>
+  </tr>
+  <tr>
+    <td><strong>Phone can't reach the server</strong></td>
+    <td>Three usual causes: (1) server bound to <code>127.0.0.1</code> — restart with
+        <code>--host 0.0.0.0</code>; (2) wrong IP — re-check with <code>ipconfig</code>, and use the
+        phone's Wi-Fi network, not mobile data; (3) firewall blocking Python — allow it on private
+        networks when Windows prompts.</td>
+  </tr>
+  <tr>
+    <td><strong>Device shows <em>pending</em> forever</strong></td>
+    <td>The code was never claimed. Codes expire after 60 minutes — generate a new one and re-enter it
+        on the phone. Check the phone's server address has no trailing slash.</td>
+  </tr>
+  <tr>
+    <td><strong>No location on the map</strong></td>
+    <td>Location permission not granted, or the phone has no fix yet. Android
+        <strong>Settings → Apps → Sentinel → Permissions → Location</strong> → allow. Indoors, GPS can
+        take a minute. On the console, press <strong>Locate now</strong> and wait for the next sync.</td>
+  </tr>
+  <tr>
+    <td><strong>Nothing syncs after a restart</strong></td>
+    <td>Check the device is still <span class="badge ok">active</span>, not
+        <span class="badge">paused</span> or <span class="badge">revoked</span>. Battery optimisation
+        can also kill background work: on the phone, set Sentinel to <strong>Unrestricted</strong>
+        under <strong>Settings → Apps → Sentinel → Battery</strong>.</td>
+  </tr>
+  <tr>
+    <td><strong>Gradle build fails on first open</strong></td>
+    <td>Usually a missing SDK platform. <strong>SDK Manager → SDK Platforms → Android 14 (API 34)</strong>.
+        Then <strong>File → Invalidate Caches → Restart</strong>. If Kotlin version errors appear,
+        let Android Studio update the Gradle plugin when it offers.</td>
+  </tr>
+  <tr>
+    <td><strong>"Database is locked"</strong></td>
+    <td>Two server instances are running against one database. Close both, then start exactly one.
+        Check for a stray <code>uvicorn</code> process in Task Manager.</td>
+  </tr>
+  <tr>
+    <td><strong>Too many alerts</strong></td>
+    <td>Zone radius is too small for GPS accuracy — raise a noisy home fence from 150&nbsp;m to
+        250&nbsp;m. City apartment blocks genuinely need wider circles.</td>
+  </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="security">18. Security checklist</h2>
+
+<p class="lead">Do these before you rely on this for anything real.</p>
+
+<ul class="checklist">
+  <li>Two-factor enabled on your parent account (<strong>Settings</strong>)</li>
+  <li>Password at least 12 characters and not reused anywhere else</li>
+  <li><code>data/secret.key</code> backed up somewhere safe, and never committed or shared</li>
+  <li>Server not exposed to the internet — home Wi-Fi only, no port forwarding</li>
+  <li>If you <em>do</em> expose it: put it behind HTTPS (Caddy or nginx) and change nothing else until you have</li>
+  <li>Computer requires a login and doesn't auto-login</li>
+  <li><code>backend/data/sentinel.db</code> backed up, and the backup is also protected</li>
+  <li>Old devices deleted from the console once a phone is retired</li>
+  <li>You've read <a href="#legal">Legal &amp; ethics</a> for your jurisdiction</li>
+</ul>
+
+<div class="box danger">
+  <span class="t">The one thing that actually matters</span>
+  <p>Device tokens and session tokens travel in HTTP headers. Over plain HTTP on an open Wi-Fi
+     network, anyone on that network can read them and impersonate your phone or your account.
+     At home on a network you control, acceptable. In a café, not. Put it behind HTTPS before you
+     treat it as production.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="limits">19. Known limits</h2>
+
+<p>Stated plainly, so you don't discover them at a bad moment.</p>
+
+<table>
+  <tr><th>Limit</th><th>What it means in practice</th></tr>
+  <tr><td><strong>Android app is uncompiled</strong></td>
+      <td>Written against API 34 but never built in the environment that produced it. Expect to fix
+          build errors on first attempt.</td></tr>
+  <tr><td><strong>No push notifications</strong></td>
+      <td>Alerts reach an <em>open</em> console tab. Close the browser and you won't be told.
+          This is the biggest gap for a safety tool; FCM plus web push is the fix.</td></tr>
+  <tr><td><strong>15-minute sync floor</strong></td>
+      <td>Android's WorkManager minimum. Location is not continuous — it's a snapshot at each sync,
+          plus whatever a <em>Locate now</em> command returns.</td></tr>
+  <tr><td><strong>Policy not enforced</strong></td>
+      <td>Screen-time and blocked apps are stored and delivered, but the phone doesn't apply them yet.</td></tr>
+  <tr><td><strong>Map is drawn, not tiled</strong></td>
+      <td>No streets or place names — just your points, zones and trail, auto-fitted. Adding Leaflet
+          or Google Maps is a contained change to <code>renderMap()</code>.</td></tr>
+  <tr><td><strong>SQLite, single computer</strong></td>
+      <td>Fine for a family (2–10 devices). Not a fleet. Server must stay on for live data.</td></tr>
+  <tr><td><strong>No remote data wipe</strong></td>
+      <td>You can revoke a device, but you can't command the phone to erase its local queue.</td></tr>
+  <tr><td><strong>Android-only</strong></td>
+      <td>No iOS agent. iOS wouldn't permit background SMS or call-log access anyway.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="legal">20. Legal &amp; ethics</h2>
+
+<div class="box warn">
+  <span class="t">Not legal advice</span>
+  <p>This is orientation, not counsel. Laws differ by country and state, and they change. If you're
+     unsure, ask a lawyer before installing anything.</p>
+</div>
+
+<h3>What's generally defensible</h3>
+<p>Monitoring <strong>your own minor child</strong>, on a phone <strong>you own and pay for</strong>,
+   with the app <strong>visible and disclosed</strong> to the child. That is the case this software is
+   designed for, and every default reflects it.</p>
+
+<h3>What is not</h3>
+<ul>
+  <li>Installing it on another adult's phone — a partner's, an ex's, an employee's personal device.
+      In many jurisdictions this is a criminal offence, not a civil matter.</li>
+  <li>Hiding the app from the person carrying the phone.</li>
+  <li>Continuing after your child turns 18. At that point only their consent is a lawful basis.</li>
+  <li>Collecting message content or credentials without disclosure. The app deliberately filters
+      one-time passcodes on the device and never transmits them.</li>
+</ul>
+
+<h3>India</h3>
+<ul>
+  <li><strong>IT Act 2000, §66</strong> — unauthorised access is criminal; this covers installing
+      monitoring software on someone else's device.</li>
+  <li><strong>DPDP Act 2023</strong> — lawful basis, purpose limitation, data minimisation, erasure
+      on request. The console's <em>Export data</em> and device-delete endpoints support these duties.</li>
+  <li><strong>Puttaswamy (2017)</strong> — informational privacy is a fundamental right; courts expect
+      necessity and proportionality, including within a family.</li>
+</ul>
+
+<h3>European Union / UK</h3>
+<ul>
+  <li><strong>GDPR</strong> — a DPIA is effectively mandatory before systematic monitoring, even in a
+      household context where the household exemption may not cover a tool of this kind.</li>
+  <li>Several member states criminalise covert tracking outright, regardless of family relationship.</li>
+</ul>
+
+<h3>United States</h3>
+<ul>
+  <li><strong>ECPA / Wiretap Act</strong> and <strong>Stored Communications Act</strong> — intercepting
+      electronic communications without consent is a federal crime.</li>
+  <li><strong>CFAA</strong> — unauthorised access to a computer; a phone counts.</li>
+  <li>State law varies sharply; several states criminalise installing tracking software on another
+      adult's phone with no exception at all.</li>
+</ul>
+
+<h3>Features this software will never have</h3>
+<table>
+  <tr><th>Not included</th><th>Why</th></tr>
+  <tr><td>Hiding the icon / fake launcher</td><td>Removes the child's ability to know and to stop.</td></tr>
+  <tr><td>Killing the ongoing notification</td><td>Suppressing it is deception, and Android requires it.</td></tr>
+  <tr><td>Remote microphone / camera / screen recording</td><td>Captures private space and third parties who never consented.</td></tr>
+  <tr><td>WhatsApp / Signal / Telegram message content</td><td>Breaks end-to-end encryption via root or accessibility abuse.</td></tr>
+  <tr><td>Keylogging or screenshots</td><td>Harvests passwords and banking credentials.</td></tr>
+  <tr><td>OTP collection</td><td>Credential theft. Filtered on-device in <code>Collectors.looksLikeOtp()</code>.</td></tr>
+  <tr><td>Surviving uninstall</td><td>Turns the phone into something the owner can't control.</td></tr>
+</table>
+
+<div class="box ok">
+  <span class="t">Full compliance notes</span>
+  <p>Per-device lawful-basis requirements and a pre-deployment checklist are in
+     <code>docs/LEGAL.md</code>.</p>
+</div>
+
+<hr>
+
+<p style="color:var(--dim2);font-size:13.5px;text-align:center;margin-top:36px">
+  Sentinel v2.0 · Self-hosted family safety · Built to be seen.<br>
+  Print this page with <span class="kbd">Ctrl</span>+<span class="kbd">P</span> for a paper copy.
+</p>
+
+</main>
+</div>
+</body>
+</html>

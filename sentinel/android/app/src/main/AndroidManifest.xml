@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Monitoring requires broad permissions. That is exactly why this app is
+         visible: no launcher-hiding, no spy icon, permanent foreground notification. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission"
+        xmlns:tools="http://schemas.android.com/tools" />
+
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.Sentinel">
+
+        <activity
+            android:name=".EnrollActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".StatusActivity"
+            android:exported="false" />
+
+        <service
+            android:name=".MonitorService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".SosTileService"
+            android:exported="true"
+            android:icon="@android:drawable/ic_dialog_alert"
+            android:label="SOS"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

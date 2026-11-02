@@ -1,0 +1,41 @@
+MIT License
+
+Copyright (c) 2026 Sentinel contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+ADDITIONAL NOTICE — INTENDED USE
+
+This software is intended for monitoring devices that you own, with the informed
+consent of the person who carries them — most commonly a parent monitoring their
+own minor child. It is built so that the person carrying the device can always
+see that monitoring is active and can stop it.
+
+Using this software to monitor another adult without their knowledge or consent
+is unlawful in many jurisdictions (including under India's IT Act 2000, the EU
+GDPR, and the US Electronic Communications Privacy Act) and is contrary to the
+intent of this project. The authors accept no liability for such use; see
+docs/LEGAL.md for the full position.
+
+This project deliberately does not implement hidden operation, message-app
+interception, keylogging, remote camera or microphone access, or call
+interception. Forks that add those capabilities do so in violation of this
+licence's intent, and the authors disclaim all responsibility for them.
